@@ -245,7 +245,7 @@
             <button class="op-tile" id="op-concat" onclick="setOp('concat')"><i class="fas fa-link"></i> 影片合併</button>
             <button class="op-tile" id="op-sxs" onclick="setOp('sxs')"><i class="fas fa-table-columns"></i> 並排分割畫面</button>
             <button class="op-tile" id="op-pip" onclick="setOp('pip')"><i class="fas fa-clone"></i> 畫中畫 (PIP)</button>
-            <button class="op-tile" id="op-info" onclick="setOp('info')"><i class="fas fa-circle-info"></i> 媒體詳細資訊</button>
+            <button class="op-tile" id="op-info" onclick="setOp('info')"><i class="fas fa-circle-info"></i> 媒體詳細資訊</option>
             <button class="op-tile" id="op-pad" onclick="setOp('pad')"><i class="fas fa-expand"></i> 填補邊框</button>
             <button class="op-tile" id="op-normalize" onclick="setOp('normalize')"><i class="fas fa-wave-square"></i> 音量標準化</button>
             <button class="op-tile" id="op-denoise" onclick="setOp('denoise')"><i class="fas fa-broom"></i> 降噪處理</button>
@@ -309,7 +309,7 @@
 
 </div>
 
-<!-- 修正 Worker 跨網域限制的 JavaScript -->
+<!-- 本地同源載入腳本 -->
 <script type="module">
 import { FFmpeg } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js';
 import { fetchFile } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js';
@@ -328,35 +328,23 @@ function setOp(op) {
   addLog(`已選擇功能：${btn ? btn.textContent.trim() : op}`, 'ok');
 }
 
-// ── 關鍵修復：下載跨網域 Worker 並轉為同源 Blob URL ──
-async function getBlobWorkerURL(url) {
-  const resp = await fetch(url);
-  const content = await resp.text();
-  const blob = new Blob([content], { type: 'text/javascript' });
-  return URL.createObjectURL(blob);
-}
-
-// ── 修復後的 FFmpeg 載入函數 ──
+// ── 直接指向專案同源 worker.js（秒速載入、不再卡住、徹底解決 CORS 限制） ──
 async function loadFFmpeg() {
   const btn = document.getElementById('loadBtn');
   const dot = document.getElementById('statusDot');
   const txt = document.getElementById('statusText');
   
   dot.className = 'dot loading';
-  txt.textContent = '正在下載 FFmpeg 核心與處理跨網域 Worker (~31 MB)...';
+  txt.textContent = '正在載入 FFmpeg 核心 (~31 MB)...';
   btn.disabled = true;
 
   ffmpeg.on('log', ({ message }) => addLog(message));
 
   try {
-    const esmBase = 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm';
     const coreBase = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm';
-
-    // 解決 Failed to construct Worker 的靈魂步驟：轉成 Blob URL
-    const classWorkerURL = await getBlobWorkerURL(`${esmBase}/worker.js`);
-
+    
     await ffmpeg.load({
-      classWorkerURL: classWorkerURL,
+      classWorkerURL: './worker.js', // 使用本地或專案內的同源 proxy Worker
       coreURL: `${coreBase}/ffmpeg-core.js`,
       wasmURL: `${coreBase}/ffmpeg-core.wasm`
     });
