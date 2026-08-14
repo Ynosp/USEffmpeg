@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <!-- 載入 coi-serviceworker 解決 GitHub Pages 的 SharedArrayBuffer / COOP / COEP 跨域阻擋問題 -->
+  <!-- 載入 coi-serviceworker 解決 SharedArrayBuffer 跨域隔離問題 -->
   <script src="coi-serviceworker.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ffmpeg webCLI 線上影音轉檔</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    /* Tejaswi Gowda ffmpeg-webCLI 原版樣式 */
+    /* Tejaswi Gowda 原版 100% 樣式架構 */
     :root {
       --bg-color: #0d1117;
       --card-bg: #161b22;
@@ -16,7 +16,6 @@
       --text-main: #c9d1d9;
       --text-muted: #8b949e;
       --accent-blue: #1f6feb;
-      --accent-green: #238636;
       --accent-green-bright: #2ea043;
     }
 
@@ -30,7 +29,7 @@
       line-height: 1.5;
     }
 
-    .container { max-width: 1000px; margin: 0 auto; }
+    .container { max-width: 1200px; margin: 0 auto; }
 
     header {
       display: flex;
@@ -97,24 +96,19 @@
       color: #f0f6fc;
     }
 
+    /* 原版自適應網格：自動容納原始全功能按鈕 */
     .grid-panel {
       display: grid;
-      grid-template-columns: repeat(7, 1fr);
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
       gap: 12px;
       margin-bottom: 24px;
-    }
-    @media (max-width: 850px) {
-      .grid-panel { grid-template-columns: repeat(4, 1fr); }
-    }
-    @media (max-width: 500px) {
-      .grid-panel { grid-template-columns: repeat(2, 1fr); }
     }
 
     .op-card {
       background-color: var(--card-bg);
       border: 1px solid var(--border-color);
       border-radius: 8px;
-      padding: 20px 8px;
+      padding: 16px 6px;
       text-align: center;
       cursor: pointer;
       transition: all 0.2s;
@@ -125,8 +119,8 @@
       background-color: #161f30;
       box-shadow: 0 0 8px rgba(31, 111, 235, 0.4);
     }
-    .op-card i { font-size: 1.5rem; margin-bottom: 10px; color: #58a6ff; display: block; }
-    .op-card span { font-size: 0.85rem; font-weight: 500; color: #c9d1d9; }
+    .op-card i { font-size: 1.4rem; margin-bottom: 8px; color: #58a6ff; display: block; }
+    .op-card span { font-size: 0.82rem; font-weight: 500; color: #c9d1d9; }
 
     .control-box {
       background-color: var(--card-bg);
@@ -186,7 +180,7 @@
 </head>
 <body>
   <div class="container">
-    <!-- Header 區塊 -->
+    <!-- Header -->
     <header>
       <div class="logo-area">
         <span class="logo-title">ffmpeg webCLI</span>
@@ -196,25 +190,41 @@
       <a href="https://github.com/tejaswigowda/ffmpeg-webCLI" target="_blank" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem;">GitHub 專案</a>
     </header>
 
-    <!-- 狀態卡片區塊 -->
+    <!-- 狀態卡片 -->
     <div class="status-card">
       <div class="status-text" id="logCurrentText">🔴 FFmpeg 尚未載入 - 請點擊「載入 FFmpeg」開始</div>
       <button class="btn" id="loadBtn" onclick="loadFFmpeg()">▶ 載入 FFmpeg (~31 MB)</button>
     </div>
 
-    <!-- 上傳/拖曳區塊 -->
+    <!-- 上傳/拖曳區 -->
     <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
       <p id="uploadPrompt" style="font-size: 1.05rem; font-weight: 500; margin-bottom: 6px; color: #f0f6fc;">📁 點擊選擇檔案，或將影音拖曳至此</p>
-      <p style="color: var(--text-muted); font-size: 0.82rem;">支援 MP4, MOV, AVI, MKV, MP3, WAV 等常用格式</p>
+      <p style="color: var(--text-muted); font-size: 0.82rem;">支援 MP4, MOV, AVI, MKV, MP3, WAV 等常見格式</p>
       <input type="file" id="fileInput" class="file-input" accept="video/*,audio/*">
     </div>
 
-    <!-- 功能選擇面板（原版 7 格卡片） -->
+    <!-- Tejaswi Gowda 原始全套 15 個功能面板 -->
     <div class="section-title">功能選擇 (OPERATIONS)</div>
     <div class="grid-panel">
       <div class="op-card active" onclick="selectOp('convert', this)">
         <i class="fa-solid fa-rotate"></i>
         <span>格式轉換</span>
+      </div>
+      <div class="op-card" onclick="selectOp('trim', this)">
+        <i class="fa-solid fa-scissors"></i>
+        <span>影片剪裁</span>
+      </div>
+      <div class="op-card" onclick="selectOp('crop', this)">
+        <i class="fa-solid fa-crop-simple"></i>
+        <span>畫面裁剪</span>
+      </div>
+      <div class="op-card" onclick="selectOp('scale', this)">
+        <i class="fa-solid fa-expand"></i>
+        <span>縮放解析度</span>
+      </div>
+      <div class="op-card" onclick="selectOp('compress', this)">
+        <i class="fa-solid fa-file-video"></i>
+        <span>影片壓縮</span>
       </div>
       <div class="op-card" onclick="selectOp('extract_audio', this)">
         <i class="fa-solid fa-music"></i>
@@ -222,11 +232,11 @@
       </div>
       <div class="op-card" onclick="selectOp('remove_audio', this)">
         <i class="fa-solid fa-volume-xmark"></i>
-        <span>消除聲音</span>
+        <span>靜音處理</span>
       </div>
-      <div class="op-card" onclick="selectOp('compress', this)">
-        <i class="fa-solid fa-file-video"></i>
-        <span>影片壓縮</span>
+      <div class="op-card" onclick="selectOp('volume', this)">
+        <i class="fa-solid fa-volume-high"></i>
+        <span>調整音量</span>
       </div>
       <div class="op-card" onclick="selectOp('gif', this)">
         <i class="fa-solid fa-image"></i>
@@ -236,13 +246,29 @@
         <i class="fa-solid fa-arrows-rotate"></i>
         <span>畫面旋轉</span>
       </div>
+      <div class="op-card" onclick="selectOp('flip', this)">
+        <i class="fa-solid fa-repeat"></i>
+        <span>鏡像翻轉</span>
+      </div>
       <div class="op-card" onclick="selectOp('speed', this)">
         <i class="fa-solid fa-gauge-high"></i>
         <span>播放變速</span>
       </div>
+      <div class="op-card" onclick="selectOp('fps', this)">
+        <i class="fa-solid fa-film"></i>
+        <span>變更 FPS</span>
+      </div>
+      <div class="op-card" onclick="selectOp('thumbnail', this)">
+        <i class="fa-solid fa-camera"></i>
+        <span>擷取縮圖</span>
+      </div>
+      <div class="op-card" onclick="selectOp('custom', this)">
+        <i class="fa-solid fa-terminal"></i>
+        <span>自訂 CLI 指令</span>
+      </div>
     </div>
 
-    <!-- 控制選單區塊 -->
+    <!-- 動態控制選單區塊 -->
     <div class="control-box">
       <div class="section-title" id="optTitle">⚙️ 格式轉換設定</div>
       <div id="optDynamicContent">
@@ -253,13 +279,14 @@
             <option value="mkv">MKV</option>
             <option value="mov">MOV</option>
             <option value="webm">WebM</option>
+            <option value="avi">AVI</option>
           </select>
         </div>
       </div>
       <button class="btn-submit" id="execBtn" onclick="runCurrentOperation()">🚀 開始處理並下載</button>
     </div>
 
-    <!-- 執行日誌區塊 -->
+    <!-- 執行日誌 -->
     <div class="section-title">執行日誌 (Terminal Output)</div>
     <div class="log-box" id="logBox">> 系統已就緒，等待載入 FFmpeg 核心...</div>
   </div>
@@ -322,7 +349,38 @@
         content.innerHTML = `
           <div class="form-group"><label>目標格式：</label>
             <select id="formatSelect">
-              <option value="mp4">MP4</option><option value="mkv">MKV</option><option value="mov">MOV</option><option value="webm">WebM</option>
+              <option value="mp4">MP4</option><option value="mkv">MKV</option><option value="mov">MOV</option><option value="webm">WebM</option><option value="avi">AVI</option>
+            </select>
+          </div>`;
+      } else if (op === 'trim') {
+        title.innerHTML = "✂️ 影片剪裁設定 (Trim)";
+        content.innerHTML = `
+          <div class="form-group"><label>開始時間 (秒)：</label><input type="number" id="trimStart" value="0"></div>
+          <div class="form-group"><label>持續時間 (秒)：</label><input type="number" id="trimDuration" value="10"></div>`;
+      } else if (op === 'crop') {
+        title.innerHTML = "✂️ 畫面裁剪設定 (Crop)";
+        content.innerHTML = `
+          <div class="form-group"><label>裁剪寬度 (Width)：</label><input type="number" id="cropW" value="640"></div>
+          <div class="form-group"><label>裁剪高度 (Height)：</label><input type="number" id="cropH" value="360"></div>
+          <div class="form-group"><label>起始 X 座標：</label><input type="number" id="cropX" value="0"></div>
+          <div class="form-group"><label>起始 Y 座標：</label><input type="number" id="cropY" value="0"></div>`;
+      } else if (op === 'scale') {
+        title.innerHTML = "📐 縮放解析度 (Scale)";
+        content.innerHTML = `
+          <div class="form-group"><label>目標解析度：</label>
+            <select id="scaleSelect">
+              <option value="1920:1080">1080p (1920x1080)</option>
+              <option value="1280:720">720p (1280x720)</option>
+              <option value="854:480">480p (854x480)</option>
+              <option value="640:360">360p (640x360)</option>
+            </select>
+          </div>`;
+      } else if (op === 'compress') {
+        title.innerHTML = "📉 影片壓縮設定";
+        content.innerHTML = `
+          <div class="form-group"><label>壓縮品質 (CRF 越小畫質越好)：</label>
+            <select id="crfSelect">
+              <option value="28">中度壓縮 (推薦)</option><option value="32">高度壓縮</option><option value="24">輕度壓縮</option>
             </select>
           </div>`;
       } else if (op === 'extract_audio') {
@@ -336,12 +394,14 @@
       } else if (op === 'remove_audio') {
         title.innerHTML = "🔇 靜音設定";
         content.innerHTML = `<p style="color:var(--text-muted); font-size:0.88rem;">將會完全移除影片中的音軌。</p>`;
-      } else if (op === 'compress') {
-        title.innerHTML = "📉 影片壓縮設定";
+      } else if (op === 'volume') {
+        title.innerHTML = "🔊 調整音量設定";
         content.innerHTML = `
-          <div class="form-group"><label>壓縮品質 (CRF)：</label>
-            <select id="crfSelect">
-              <option value="28">中度壓縮 (推薦)</option><option value="32">高度壓縮</option><option value="24">輕度壓縮</option>
+          <div class="form-group"><label>音量倍數：</label>
+            <select id="volumeSelect">
+              <option value="0.5">50% (音量變小一半)</option>
+              <option value="1.5">150% (音量放大 1.5 倍)</option>
+              <option value="2.0">200% (音量放大 2 倍)</option>
             </select>
           </div>`;
       } else if (op === 'gif') {
@@ -358,6 +418,15 @@
               <option value="1">順時針 90 度</option><option value="2">逆時針 90 度</option><option value="3">180 度翻轉</option>
             </select>
           </div>`;
+      } else if (op === 'flip') {
+        title.innerHTML = "🪞 鏡像翻轉設定";
+        content.innerHTML = `
+          <div class="form-group"><label>翻轉方式：</label>
+            <select id="flipSelect">
+              <option value="hflip">水平翻轉 (左右)</option>
+              <option value="vflip">垂直翻轉 (上下)</option>
+            </select>
+          </div>`;
       } else if (op === 'speed') {
         title.innerHTML = "⚡ 播放變速設定";
         content.innerHTML = `
@@ -365,6 +434,24 @@
             <select id="speedSelect">
               <option value="2.0">2.0x 快轉</option><option value="1.5">1.5x 快轉</option><option value="0.5">0.5x 慢動作</option>
             </select>
+          </div>`;
+      } else if (op === 'fps') {
+        title.innerHTML = "🎞️ 變更 FPS 幀率";
+        content.innerHTML = `
+          <div class="form-group"><label>目標 FPS：</label>
+            <select id="fpsSelect">
+              <option value="60">60 FPS</option><option value="30">30 FPS</option><option value="24">24 FPS (電影感)</option>
+            </select>
+          </div>`;
+      } else if (op === 'thumbnail') {
+        title.innerHTML = "📸 擷取影片縮圖";
+        content.innerHTML = `
+          <div class="form-group"><label>擷取時間點 (秒)：</label><input type="number" id="thumbTime" value="1"></div>`;
+      } else if (op === 'custom') {
+        title.innerHTML = "💻 自訂 FFmpeg CLI 指令";
+        content.innerHTML = `
+          <div class="form-group"><label>輸入參數 (輸入檔預設為 input.mp4, 輸出檔預設為 output.mp4)：</label>
+            <input type="text" id="customArgs" value="-i input.mp4 -vcodec copy output.mp4">
           </div>`;
       }
     }
@@ -394,8 +481,9 @@
       execBtn.innerText = "⏳ 處理中，請稍候...";
 
       try {
-        const inputName = "input_" + currentFile.name;
-        let outputName = "output";
+        const ext = currentFile.name.split('.').pop() || 'mp4';
+        const inputName = `input.${ext}`;
+        let outputName = "output.mp4";
         let args = [];
 
         log(`寫入虛擬檔案系統: ${inputName}`);
@@ -403,38 +491,64 @@
 
         if (currentOp === 'convert') {
           const fmt = document.getElementById('formatSelect').value;
-          outputName += "." + fmt;
+          outputName = `output.${fmt}`;
           args = ['-i', inputName, outputName];
-        } else if (currentOp === 'extract_audio') {
-          const fmt = document.getElementById('audioFormatSelect').value;
-          outputName += "." + fmt;
-          args = ['-i', inputName, '-vn', outputName];
-        } else if (currentOp === 'remove_audio') {
-          outputName += ".mp4";
-          args = ['-i', inputName, '-an', '-vcodec', 'copy', outputName];
+        } else if (currentOp === 'trim') {
+          const start = document.getElementById('trimStart').value;
+          const dur = document.getElementById('trimDuration').value;
+          args = ['-ss', start, '-i', inputName, '-t', dur, '-c', 'copy', outputName];
+        } else if (currentOp === 'crop') {
+          const w = document.getElementById('cropW').value;
+          const h = document.getElementById('cropH').value;
+          const x = document.getElementById('cropX').value;
+          const y = document.getElementById('cropY').value;
+          args = ['-i', inputName, '-vf', `crop=${w}:${h}:${x}:${y}`, outputName];
+        } else if (currentOp === 'scale') {
+          const res = document.getElementById('scaleSelect').value;
+          args = ['-i', inputName, '-vf', `scale=${res}`, outputName];
         } else if (currentOp === 'compress') {
           const crf = document.getElementById('crfSelect').value;
-          outputName += "_compressed.mp4";
           args = ['-i', inputName, '-vcodec', 'h264', '-crf', crf, outputName];
+        } else if (currentOp === 'extract_audio') {
+          const fmt = document.getElementById('audioFormatSelect').value;
+          outputName = `output.${fmt}`;
+          args = ['-i', inputName, '-vn', outputName];
+        } else if (currentOp === 'remove_audio') {
+          args = ['-i', inputName, '-an', '-vcodec', 'copy', outputName];
+        } else if (currentOp === 'volume') {
+          const vol = document.getElementById('volumeSelect').value;
+          args = ['-i', inputName, '-filter:a', `volume=${vol}`, outputName];
         } else if (currentOp === 'gif') {
           const fps = document.getElementById('gifFps').value;
-          outputName += ".gif";
+          outputName = "output.gif";
           args = ['-i', inputName, '-vf', `fps=${fps},scale=320:-1:flags=lance`, outputName];
         } else if (currentOp === 'rotate') {
           const rot = document.getElementById('rotateSelect').value;
-          outputName += "_rotated.mp4";
           args = ['-i', inputName, '-vf', `transpose=${rot}`, outputName];
+        } else if (currentOp === 'flip') {
+          const flip = document.getElementById('flipSelect').value;
+          args = ['-i', inputName, '-vf', flip, outputName];
         } else if (currentOp === 'speed') {
           const spd = document.getElementById('speedSelect').value;
-          outputName += "_speed.mp4";
           let pts = 1 / parseFloat(spd);
           args = ['-i', inputName, '-filter_complex', `[0:v]setpts=${pts}*PTS[v];[0:a]atempo=${spd}[a]`, '-map', '[v]', '-map', '[a]', outputName];
+        } else if (currentOp === 'fps') {
+          const fps = document.getElementById('fpsSelect').value;
+          args = ['-i', inputName, '-r', fps, outputName];
+        } else if (currentOp === 'thumbnail') {
+          const t = document.getElementById('thumbTime').value;
+          outputName = "thumbnail.png";
+          args = ['-ss', t, '-i', inputName, '-vframes', '1', outputName];
+        } else if (currentOp === 'custom') {
+          const cmd = document.getElementById('customArgs').value;
+          args = cmd.trim().split(/\s+/);
+          outputName = args[args.length - 1] || "output.mp4";
         }
 
         log(`執行指令: ffmpeg ${args.join(' ')}`);
         await ffmpeg.run(...args);
 
-        log("處理完成，正在準備匯出下載...");
+        log("處理完成，準備下載...");
         const data = ffmpeg.FS('readFile', outputName);
         const blob = new Blob([data.buffer]);
         const url = URL.createObjectURL(blob);
