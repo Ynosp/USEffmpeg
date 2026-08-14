@@ -578,6 +578,42 @@
       alert("FFmpeg 載入失敗：" + err.message);
     }
   }
+<!-- 引入 FFmpeg WebAssembly 核心庫 -->
+<script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+
+<script>
+  const { createFFmpeg, fetchFile } = FFmpeg;
+  let ffmpeg = null;
+
+  async function loadFFmpeg() {
+    const btn = document.querySelector("button[onclick*='loadFFmpeg']");
+    const statusText = document.getElementById("logCurrentText");
+
+    try {
+      if (btn) btn.innerText = "⏳ 載入核心中...";
+      if (statusText) statusText.innerText = "正在下載 FFmpeg 單線程模組 (~25 MB)...";
+
+      // 強制使用 core-st (Single Thread) 核心，徹底避開 SharedArrayBuffer
+      ffmpeg = createFFmpeg({
+        log: true,
+        corePath: 'https://unpkg.com/@ffmpeg/core-st@0.11.1/dist/ffmpeg-core.js'
+      });
+
+      await ffmpeg.load();
+
+      if (statusText) statusText.innerText = "已就緒 (FFmpeg Loaded)";
+      if (btn) {
+        btn.innerText = "✅ FFmpeg 已成功載入";
+        btn.style.backgroundColor = "#28a745";
+        btn.disabled = true;
+      }
+    } catch (err) {
+      console.error(err);
+      if (statusText) statusText.innerText = "載入失敗：" + err.message;
+      if (btn) btn.innerText = "❌ 載入失敗，點擊重試";
+      alert("FFmpeg 載入失敗：" + err.message);
+    }
+  }
 </script>
 </body>
 </html>
