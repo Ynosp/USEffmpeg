@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
   <!-- 載入 coi-serviceworker 解決 GitHub Pages 的 SharedArrayBuffer / COOP / COEP 跨域阻擋問題 -->
   <script src="coi-serviceworker.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ffmpeg webCLI</title>
+  <title>ffmpeg webCLI 線上影音轉檔</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     /* Tejaswi Gowda ffmpeg-webCLI 原版樣式 */
@@ -186,68 +186,68 @@
 </head>
 <body>
   <div class="container">
-    <!-- 原版 Header 結構 -->
+    <!-- Header 區塊 -->
     <header>
       <div class="logo-area">
         <span class="logo-title">ffmpeg webCLI</span>
-        <span class="badge">Offline First</span>
-        <span class="badge badge-green">🔒 100% Client Side, files never leave your browser</span>
+        <span class="badge">離線優先</span>
+        <span class="badge badge-green">🔒 100% 本地端處理，檔案絕不上傳</span>
       </div>
-      <a href="https://github.com/tejaswigowda/ffmpeg-webCLI" target="_blank" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem;">GitHub Repo</a>
+      <a href="https://github.com/tejaswigowda/ffmpeg-webCLI" target="_blank" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem;">GitHub 專案</a>
     </header>
 
-    <!-- 原版 Status Card 結構 -->
+    <!-- 狀態卡片區塊 -->
     <div class="status-card">
-      <div class="status-text" id="logCurrentText">🔴 FFmpeg Not Loaded - Click "Load FFmpeg" to Start</div>
-      <button class="btn" id="loadBtn" onclick="loadFFmpeg()">▶ Load FFmpeg (~31 MB)</button>
+      <div class="status-text" id="logCurrentText">🔴 FFmpeg 尚未載入 - 請點擊「載入 FFmpeg」開始</div>
+      <button class="btn" id="loadBtn" onclick="loadFFmpeg()">▶ 載入 FFmpeg (~31 MB)</button>
     </div>
 
-    <!-- 原版 Drag & Drop Zone 結構 -->
+    <!-- 上傳/拖曳區塊 -->
     <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
-      <p id="uploadPrompt" style="font-size: 1.05rem; font-weight: 500; margin-bottom: 6px; color: #f0f6fc;">📁 Click to Select File, or Drag and Drop Video Here</p>
-      <p style="color: var(--text-muted); font-size: 0.82rem;">Supports MP4, MOV, AVI, MKV, MP3, WAV, etc.</p>
+      <p id="uploadPrompt" style="font-size: 1.05rem; font-weight: 500; margin-bottom: 6px; color: #f0f6fc;">📁 點擊選擇檔案，或將影音拖曳至此</p>
+      <p style="color: var(--text-muted); font-size: 0.82rem;">支援 MP4, MOV, AVI, MKV, MP3, WAV 等常用格式</p>
       <input type="file" id="fileInput" class="file-input" accept="video/*,audio/*">
     </div>
 
-    <!-- 原版 Operations Grid 結構 -->
-    <div class="section-title">OPERATIONS</div>
+    <!-- 功能選擇面板（原版 7 格卡片） -->
+    <div class="section-title">功能選擇 (OPERATIONS)</div>
     <div class="grid-panel">
-      <div class="op-card" onclick="selectOp('convert', this)">
+      <div class="op-card active" onclick="selectOp('convert', this)">
         <i class="fa-solid fa-rotate"></i>
-        <span>Convert</span>
+        <span>格式轉換</span>
       </div>
       <div class="op-card" onclick="selectOp('extract_audio', this)">
         <i class="fa-solid fa-music"></i>
-        <span>Extract Audio</span>
+        <span>提取音訊</span>
       </div>
       <div class="op-card" onclick="selectOp('remove_audio', this)">
         <i class="fa-solid fa-volume-xmark"></i>
-        <span>Mute Audio</span>
+        <span>消除聲音</span>
       </div>
       <div class="op-card" onclick="selectOp('compress', this)">
         <i class="fa-solid fa-file-video"></i>
-        <span>Compress</span>
+        <span>影片壓縮</span>
       </div>
       <div class="op-card" onclick="selectOp('gif', this)">
         <i class="fa-solid fa-image"></i>
-        <span>To GIF</span>
+        <span>轉為 GIF</span>
       </div>
       <div class="op-card" onclick="selectOp('rotate', this)">
         <i class="fa-solid fa-arrows-rotate"></i>
-        <span>Rotate</span>
+        <span>畫面旋轉</span>
       </div>
       <div class="op-card" onclick="selectOp('speed', this)">
         <i class="fa-solid fa-gauge-high"></i>
-        <span>Speed</span>
+        <span>播放變速</span>
       </div>
     </div>
 
-    <!-- 原版 Control Box 結構 -->
+    <!-- 控制選單區塊 -->
     <div class="control-box">
-      <div class="section-title" id="optTitle">⚙️ Convert Options</div>
+      <div class="section-title" id="optTitle">⚙️ 格式轉換設定</div>
       <div id="optDynamicContent">
         <div class="form-group">
-          <label>Target Format:</label>
+          <label>目標格式：</label>
           <select id="formatSelect">
             <option value="mp4">MP4</option>
             <option value="mkv">MKV</option>
@@ -256,12 +256,12 @@
           </select>
         </div>
       </div>
-      <button class="btn-submit" id="execBtn" onclick="runCurrentOperation()">🚀 Process & Download</button>
+      <button class="btn-submit" id="execBtn" onclick="runCurrentOperation()">🚀 開始處理並下載</button>
     </div>
 
-    <!-- 原版 Terminal Output Log Box 結構 -->
-    <div class="section-title">Terminal Output</div>
-    <div class="log-box" id="logBox">> System Ready. Waiting to load FFmpeg...</div>
+    <!-- 執行日誌區塊 -->
+    <div class="section-title">執行日誌 (Terminal Output)</div>
+    <div class="log-box" id="logBox">> 系統已就緒，等待載入 FFmpeg 核心...</div>
   </div>
 
   <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
@@ -286,26 +286,26 @@
       const statusText = document.getElementById("logCurrentText");
 
       try {
-        if (btn) { btn.innerText = "⏳ Loading Core..."; btn.disabled = true; }
-        if (statusText) statusText.innerText = "Downloading FFmpeg WebAssembly Module (~31 MB)...";
-        log("Downloading FFmpeg WebAssembly Module...");
+        if (btn) { btn.innerText = "⏳ 載入核心中..."; btn.disabled = true; }
+        if (statusText) statusText.innerText = "正在下載 FFmpeg WebAssembly 模組 (~31 MB)...";
+        log("開始下載 FFmpeg WebAssembly 模組...");
 
         ffmpeg = createFFmpeg({ log: true });
         ffmpeg.setLogger(({ message }) => log(`[FFmpeg] ${message}`));
 
         await ffmpeg.load();
 
-        if (statusText) statusText.innerHTML = "<span style='color: #34d399;'>🟢 FFmpeg Ready! Select or Drag a Video.</span>";
+        if (statusText) statusText.innerHTML = "<span style='color: #34d399;'>🟢 FFmpeg 已就緒！請選擇或拖曳影片。</span>";
         if (btn) {
-          btn.innerText = "✅ FFmpeg Loaded";
+          btn.innerText = "✅ FFmpeg 已成功載入";
           btn.style.backgroundColor = "#238636";
           btn.disabled = true;
         }
-        log("FFmpeg Core Loaded Successfully!");
+        log("FFmpeg 核心成功載入！");
       } catch (err) {
-        if (statusText) statusText.innerText = "Load Failed: " + err.message;
-        if (btn) { btn.innerText = "❌ Retry Load"; btn.disabled = false; }
-        alert("FFmpeg Load Failed: " + err.message);
+        if (statusText) statusText.innerText = "載入失敗：" + err.message;
+        if (btn) { btn.innerText = "❌ 點擊重試"; btn.disabled = false; }
+        alert("FFmpeg 載入失敗：" + err.message);
       }
     }
 
@@ -318,52 +318,52 @@
       const content = document.getElementById('optDynamicContent');
 
       if (op === 'convert') {
-        title.innerHTML = "⚙️ Convert Options";
+        title.innerHTML = "⚙️ 格式轉換設定";
         content.innerHTML = `
-          <div class="form-group"><label>Target Format:</label>
+          <div class="form-group"><label>目標格式：</label>
             <select id="formatSelect">
               <option value="mp4">MP4</option><option value="mkv">MKV</option><option value="mov">MOV</option><option value="webm">WebM</option>
             </select>
           </div>`;
       } else if (op === 'extract_audio') {
-        title.innerHTML = "🎵 Audio Extraction Options";
+        title.innerHTML = "🎵 提取音訊設定";
         content.innerHTML = `
-          <div class="form-group"><label>Audio Format:</label>
+          <div class="form-group"><label>音訊格式：</label>
             <select id="audioFormatSelect">
               <option value="mp3">MP3</option><option value="aac">AAC</option><option value="wav">WAV</option>
             </select>
           </div>`;
       } else if (op === 'remove_audio') {
-        title.innerHTML = "🔇 Mute Options";
-        content.innerHTML = `<p style="color:var(--text-muted); font-size:0.88rem;">Will strip audio track completely.</p>`;
+        title.innerHTML = "🔇 靜音設定";
+        content.innerHTML = `<p style="color:var(--text-muted); font-size:0.88rem;">將會完全移除影片中的音軌。</p>`;
       } else if (op === 'compress') {
-        title.innerHTML = "📉 Compression Options";
+        title.innerHTML = "📉 影片壓縮設定";
         content.innerHTML = `
-          <div class="form-group"><label>Quality (CRF):</label>
+          <div class="form-group"><label>壓縮品質 (CRF)：</label>
             <select id="crfSelect">
-              <option value="28">Medium Compression</option><option value="32">High Compression</option><option value="24">Low Compression</option>
+              <option value="28">中度壓縮 (推薦)</option><option value="32">高度壓縮</option><option value="24">輕度壓縮</option>
             </select>
           </div>`;
       } else if (op === 'gif') {
-        title.innerHTML = "🖼️ GIF Options";
+        title.innerHTML = "🖼️ 轉為 GIF 設定";
         content.innerHTML = `
-          <div class="form-group"><label>FPS Rate:</label>
+          <div class="form-group"><label>幀率 (FPS)：</label>
             <select id="gifFps"><option value="10">10 FPS</option><option value="15">15 FPS</option></select>
           </div>`;
       } else if (op === 'rotate') {
-        title.innerHTML = "🔄 Rotation Options";
+        title.innerHTML = "🔄 畫面旋轉設定";
         content.innerHTML = `
-          <div class="form-group"><label>Direction:</label>
+          <div class="form-group"><label>旋轉方向：</label>
             <select id="rotateSelect">
-              <option value="1">90 Clockwise</option><option value="2">90 Counter-Clockwise</option><option value="3">180 Flip</option>
+              <option value="1">順時針 90 度</option><option value="2">逆時針 90 度</option><option value="3">180 度翻轉</option>
             </select>
           </div>`;
       } else if (op === 'speed') {
-        title.innerHTML = "⚡ Speed Options";
+        title.innerHTML = "⚡ 播放變速設定";
         content.innerHTML = `
-          <div class="form-group"><label>Speed Multiplier:</label>
+          <div class="form-group"><label>播放倍率：</label>
             <select id="speedSelect">
-              <option value="2.0">2.0x Faster</option><option value="1.5">1.5x Faster</option><option value="0.5">0.5x Slower</option>
+              <option value="2.0">2.0x 快轉</option><option value="1.5">1.5x 快轉</option><option value="0.5">0.5x 慢動作</option>
             </select>
           </div>`;
       }
@@ -374,31 +374,31 @@
       currentFile = files[0];
       const uploadPrompt = document.getElementById("uploadPrompt");
       if (uploadPrompt) {
-        uploadPrompt.innerText = `📄 Loaded File: ${currentFile.name} (${(currentFile.size / 1024 / 1024).toFixed(2)} MB)`;
+        uploadPrompt.innerText = `📄 已載入檔案：${currentFile.name} (${(currentFile.size / 1024 / 1024).toFixed(2)} MB)`;
       }
-      log(`File selected: ${currentFile.name}`);
+      log(`已選擇檔案: ${currentFile.name}`);
     }
 
     async function runCurrentOperation() {
       if (!ffmpeg || !ffmpeg.isLoaded()) {
-        alert("Please load FFmpeg first!");
+        alert("請先載入 FFmpeg！");
         return;
       }
       if (!currentFile) {
-        alert("Please select a file first!");
+        alert("請先選擇影片檔案！");
         return;
       }
 
       const execBtn = document.getElementById('execBtn');
       execBtn.disabled = true;
-      execBtn.innerText = "⏳ Processing...";
+      execBtn.innerText = "⏳ 處理中，請稍候...";
 
       try {
         const inputName = "input_" + currentFile.name;
         let outputName = "output";
         let args = [];
 
-        log(`Writing to virtual FS: ${inputName}`);
+        log(`寫入虛擬檔案系統: ${inputName}`);
         ffmpeg.FS('writeFile', inputName, await fetchFile(currentFile));
 
         if (currentOp === 'convert') {
@@ -431,10 +431,10 @@
           args = ['-i', inputName, '-filter_complex', `[0:v]setpts=${pts}*PTS[v];[0:a]atempo=${spd}[a]`, '-map', '[v]', '-map', '[a]', outputName];
         }
 
-        log(`Running command: ffmpeg ${args.join(' ')}`);
+        log(`執行指令: ffmpeg ${args.join(' ')}`);
         await ffmpeg.run(...args);
 
-        log("Processing completed, preparing download...");
+        log("處理完成，正在準備匯出下載...");
         const data = ffmpeg.FS('readFile', outputName);
         const blob = new Blob([data.buffer]);
         const url = URL.createObjectURL(blob);
@@ -442,13 +442,13 @@
         a.href = url;
         a.download = outputName;
         a.click();
-        log(`Download ready: ${outputName}`);
+        log(`匯出成功: ${outputName}`);
       } catch (err) {
-        alert("Execution failed: " + err.message);
-        log("Error: " + err.message);
+        alert("執行失敗: " + err.message);
+        log("錯誤: " + err.message);
       } finally {
         execBtn.disabled = false;
-        execBtn.innerText = "🚀 Process & Download";
+        execBtn.innerText = "🚀 開始處理並下載";
       }
     }
 
