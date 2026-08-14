@@ -104,7 +104,7 @@
     .op-tile.active { border-color: var(--accent); background: rgba(99,102,241,.12); color: var(--accent); }
     .op-tile.disabled { opacity: 0.4; cursor: not-allowed; }
     .op-tile.disabled:hover { border-color: var(--border); color: var(--muted); }
-    .op-tile i { display: block; font-size: 30px; margin-bottom: 12px; }
+    .op-tile i { display: block; font-size: 24px; margin-bottom: 8px; }
 
     /* ── Op panels ── */
     .op-panel { background: var(--surface2); border-radius: 8px; padding: 13px; margin-bottom: 14px; }
@@ -126,19 +126,16 @@
     .cmd-preview { font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace; font-size: 0.72rem; background: #080a10; color: #7dd3fc; padding: 10px 12px; border-radius: 6px; word-break: break-all; line-height: 1.6; margin-top: 4px; white-space: pre-wrap; min-height: 36px; }
     .hint { font-size: 0.72rem; color: var(--muted); margin-top: 6px; }
 
-    /* ── Operation stack ── */
+    /* ── Mode toggle ── */
     .mode-toggle { display: inline-flex; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 3px; gap: 3px; margin-bottom: 12px; }
     .mode-btn { padding: 6px 16px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; color: var(--muted); cursor: pointer; border: none; background: transparent; transition: background .15s, color .15s; }
     .mode-btn:hover { color: var(--text); }
     .mode-btn.active { background: var(--accent); color: #fff; }
-    .stack-empty { font-size: 0.8rem; color: var(--muted); padding: 10px 4px; text-align: center; }
 
     /* Batch mode */
     .batch-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 5px; font-size: 0.7rem; font-weight: 600; cursor: pointer; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); transition: all .15s; }
     .batch-toggle:hover { background: var(--surface3); color: var(--text); }
     .batch-toggle.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-    .batch-queue-list { display: none; }
-    .batch-queue-list.visible { display: block; margin-top: 12px; }
     
     /* ── Progress ── */
     .progress-wrap { margin: 12px 0; width: 100%; }
@@ -148,7 +145,6 @@
 
     /* ── Log ── */
     .log-shell { background: #080a10; border-radius: 0 0 var(--r) var(--r); overflow: hidden; }
-    .log-current { position: sticky; top: 0; z-index: 1; font-family: monospace; font-size: 0.73rem; padding: 10px 12px; background: #0f1420; border-bottom: 1px solid rgba(129, 226, 248, 0.16); color: #e2e8f0; }
     .log { font-family: monospace; font-size: 0.73rem; background: #080a10; color: #7dd3fc; padding: 12px; height: 130px; overflow-y: auto; }
     .log-line.err { color: #fca5a5; }
     .log-line.ok { color: #86efac; }
@@ -210,6 +206,28 @@
           </div>
         </div>
       </div>
+
+      <!-- Trim -->
+      <div class="card" id="trimCard" style="margin-top:16px;">
+        <div class="card-header">
+          影片剪輯 (Trim) <span class="tag">套用至所有操作</span>
+        </div>
+        <div class="card-body">
+          <p class="hint" style="margin-bottom:8px">拖曳滑桿設定起始與結束時間。保持預設則保留完整影片。</p>
+          <div class="trim-row">
+            <div class="trim-col">
+              <label>起始時間</label>
+              <input type="range" id="trimStart" min="0" max="100" step="0.1" value="0">
+              <div class="time-val" id="startVal">0:00.0</div>
+            </div>
+            <div class="trim-col">
+              <label>結束時間</label>
+              <input type="range" id="trimEnd" min="0" max="100" step="0.1" value="100">
+              <div class="time-val" id="endVal">0:00.0</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Right: Operations -->
@@ -217,14 +235,62 @@
       <div class="card">
         <div class="card-header">處理功能選擇</div>
         <div class="card-body">
-          <div class="form-row" style="margin-top:12px">
+
+          <!-- 模式切換 -->
+          <div class="mode-toggle">
+            <button class="mode-btn active" id="modeSingle"><i class="fas fa-square"></i> 單一模式</button>
+            <button class="mode-btn" id="modeStack"><i class="fas fa-layer-group"></i> 組合堆疊 (鏈式處理)</button>
+          </div>
+
+          <!-- 全部 28 個功能 Icon 按鈕區 -->
+          <div class="ops-grid">
+            <button class="op-tile active" id="op-convert" onclick="setOp('convert')"><i class="fas fa-arrows-rotate"></i> 格式轉換</button>
+            <button class="op-tile" id="op-resizecompress" onclick="setOp('resizecompress')"><i class="fas fa-compress"></i> 縮放與壓縮</button>
+            <button class="op-tile" id="op-audio" onclick="setOp('audio')"><i class="fas fa-music"></i> 提取音訊</button>
+            <button class="op-tile" id="op-mute" onclick="setOp('mute')"><i class="fas fa-volume-xmark"></i> 靜音 / 移除音訊</button>
+            <button class="op-tile" id="op-gif" onclick="setOp('gif')"><i class="fas fa-film"></i> 製作 GIF</button>
+            <button class="op-tile" id="op-speed" onclick="setOp('speed')"><i class="fas fa-bolt"></i> 速度調整</button>
+            <button class="op-tile" id="op-rotate" onclick="setOp('rotate')"><i class="fas fa-rotate-right"></i> 旋轉 / 鏡像</button>
+            <button class="op-tile" id="op-crop" onclick="setOp('crop')"><i class="fas fa-crop-simple"></i> 畫面裁切</button>
+            <button class="op-tile" id="op-thumbnail" onclick="setOp('thumbnail')"><i class="fas fa-image"></i> 擷取縮圖</button>
+            <button class="op-tile" id="op-reverse" onclick="setOp('reverse')"><i class="fas fa-backward"></i> 倒放影片</button>
+            <button class="op-tile" id="op-fade" onclick="setOp('fade')"><i class="fas fa-circle-half-stroke"></i> 淡入 / 淡出</button>
+            <button class="op-tile" id="op-adjust" onclick="setOp('adjust')"><i class="fas fa-sliders"></i> 色彩微調</button>
+            <button class="op-tile" id="op-stripmeta" onclick="setOp('stripmeta')"><i class="fas fa-ban"></i> 清除元數據</button>
+            <button class="op-tile" id="op-autocaption" onclick="setOp('autocaption')"><i class="fas fa-microphone-lines"></i> 自動字幕</button>
+            <button class="op-tile" id="op-subtitles" onclick="setOp('subtitles')"><i class="fas fa-closed-captioning"></i> 內嵌字幕</button>
+            <button class="op-tile" id="op-volume" onclick="setOp('volume')"><i class="fas fa-volume-high"></i> 音量調整</button>
+            <button class="op-tile" id="op-loop" onclick="setOp('loop')"><i class="fas fa-repeat"></i> 重複循環</button>
+            <button class="op-tile" id="op-overlay" onclick="setOp('overlay')"><i class="fas fa-stamp"></i> 水印標籤</button>
+            <button class="op-tile" id="op-mixaudio" onclick="setOp('mixaudio')"><i class="fas fa-headphones"></i> 混音 / 背景音樂</button>
+            <button class="op-tile" id="op-concat" onclick="setOp('concat')"><i class="fas fa-link"></i> 影片合併</button>
+            <button class="op-tile" id="op-sxs" onclick="setOp('sxs')"><i class="fas fa-table-columns"></i> 並排分割畫面</button>
+            <button class="op-tile" id="op-pip" onclick="setOp('pip')"><i class="fas fa-clone"></i> 畫中畫 (PIP)</button>
+            <button class="op-tile" id="op-info" onclick="setOp('info')"><i class="fas fa-circle-info"></i> 媒體詳細資訊</button>
+            <button class="op-tile" id="op-pad" onclick="setOp('pad')"><i class="fas fa-expand"></i> 填補邊框</button>
+            <button class="op-tile" id="op-normalize" onclick="setOp('normalize')"><i class="fas fa-wave-square"></i> 音量標準化</button>
+            <button class="op-tile" id="op-denoise" onclick="setOp('denoise')"><i class="fas fa-broom"></i> 降噪處理</button>
+            <button class="op-tile" id="op-boomerang" onclick="setOp('boomerang')"><i class="fas fa-retweet"></i> 迴旋鏢</button>
+            <button class="op-tile" id="op-sharpenblur" onclick="setOp('sharpenblur')"><i class="fas fa-eye"></i> 銳化 / 模糊</button>
+            <button class="op-tile" id="op-raw" onclick="setOp('raw')"><i class="fas fa-terminal"></i> 自訂 FFmpeg</button>
+          </div>
+
+          <!-- 動態選項面板區 -->
+          <div class="op-panel" id="panel-convert">
+            <h4>格式轉換</h4>
+            <p class="hint">請使用下方「輸出格式」選擇欲轉換的格式。</p>
+          </div>
+
+          <div id="singleOutFmtWrap" class="form-row" style="margin-top:12px">
             <div class="form-group">
               <label class="lbl">輸出格式</label>
               <select id="singleOutFmt">
                 <option value="mp4">MP4 (H.264 + AAC)</option>
                 <option value="mkv">MKV (H.264 + AAC)</option>
+                <option value="mov">MOV (H.264 + AAC)</option>
                 <option value="webm">WebM (VP9 + Opus)</option>
                 <option value="gif">GIF (動態圖)</option>
+                <option value="avi">AVI</option>
               </select>
             </div>
           </div>
@@ -273,8 +339,18 @@ const ffmpeg = new FFmpeg();
 let inputFile = null;
 let outBlob = null;
 let outExt = 'mp4';
+let currentOp = 'convert';
 
-// ── 1. 修正「載入 FFmpeg」按鈕功能 ──
+// ── 切換功能 Icon ──
+function setOp(op) {
+  currentOp = op;
+  document.querySelectorAll('.op-tile').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('op-' + op);
+  if (btn) btn.classList.add('active');
+  addLog(`已選擇功能：${btn ? btn.textContent.trim() : op}`, 'ok');
+}
+
+// ── 載入 FFmpeg ──
 async function loadFFmpeg() {
   const btn = document.getElementById('loadBtn');
   const dot = document.getElementById('statusDot');
@@ -308,18 +384,13 @@ async function loadFFmpeg() {
   }
 }
 
-// ── 2. 修正「檔案拖動上傳 (Drag & Drop)」功能 ──
+// ── 拖放上傳 (Drag & Drop) ──
 const dropZone = document.getElementById('dropZone');
 
 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-  dropZone.addEventListener(eventName, preventDefaults, false);
-  document.body.addEventListener(eventName, preventDefaults, false);
+  dropZone.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
+  document.body.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
 });
-
-function preventDefaults(e) {
-  e.preventDefault();
-  e.stopPropagation();
-}
 
 ['dragenter', 'dragover'].forEach(eventName => {
   dropZone.addEventListener(eventName, () => dropZone.classList.add('over'), false);
@@ -330,17 +401,12 @@ function preventDefaults(e) {
 });
 
 dropZone.addEventListener('drop', (e) => {
-  const dt = e.dataTransfer;
-  const files = dt.files;
-  if (files && files.length > 0) {
-    handleFile(files[0]);
-  }
+  const files = e.dataTransfer.files;
+  if (files && files.length > 0) handleFile(files[0]);
 });
 
 function handleFileInput(input) {
-  if (input.files && input.files[0]) {
-    handleFile(input.files[0]);
-  }
+  if (input.files && input.files[0]) handleFile(input.files[0]);
 }
 
 function handleFile(file) {
@@ -365,11 +431,10 @@ function clearInput() {
 }
 
 function syncProcessBtn() {
-  const btn = document.getElementById('processBtn');
-  btn.disabled = !inputFile;
+  document.getElementById('processBtn').disabled = !inputFile;
 }
 
-// ── 3. 影片轉檔執行邏輯 ──
+// ── 執行處理 ──
 async function processVideo() {
   if (!inputFile) return;
   if (!document.getElementById('statusDot').classList.contains('loaded')) {
@@ -385,25 +450,23 @@ async function processVideo() {
   const outName = 'output.' + ext;
 
   try {
-    addLog('正在寫入檔案至虛擬系統...', 'ok');
+    addLog('正在寫入檔案...', 'ok');
     await ffmpeg.writeFile(inName, await fetchFile(inputFile));
 
-    addLog(`執行轉檔指令轉為 ${ext}...`, 'ok');
+    addLog(`執行 ${currentOp} 轉檔指令至 ${ext}...`, 'ok');
     await ffmpeg.exec(['-i', inName, outName]);
 
     const data = await ffmpeg.readFile(outName);
     outExt = ext;
     outBlob = new Blob([data.buffer], { type: `video/${ext}` });
 
-    const outVideo = document.getElementById('outVideo');
-    outVideo.src = URL.createObjectURL(outBlob);
-    
+    document.getElementById('outVideo').src = URL.createObjectURL(outBlob);
     document.getElementById('outEmpty').classList.add('hidden');
     document.getElementById('outContent').classList.remove('hidden');
 
-    addLog('處理完成！可點擊下載。', 'ok');
+    addLog('處理完成！請點擊下載。', 'ok');
   } catch (err) {
-    addLog('轉檔失敗：' + err.message, 'err');
+    addLog('處理失敗：' + err.message, 'err');
   } finally {
     btn.disabled = false;
     btn.innerHTML = '<i class="fas fa-gear"></i> 開始處理影片';
@@ -431,7 +494,8 @@ function clearLog() {
   document.getElementById('log').innerHTML = '';
 }
 
-// 全局掛載函數供按鈕觸發
+// 掛載全域函數
+window.setOp = setOp;
 window.loadFFmpeg = loadFFmpeg;
 window.handleFileInput = handleFileInput;
 window.clearInput = clearInput;
