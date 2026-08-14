@@ -1,142 +1,133 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>USEffmpeg - 線上影片轉檔與處理系統</title>
-  <link rel="manifest" href="manifest.json">
-  <style>
-    :root {
-      --primary-color: #2563eb;
-      --primary-hover: #1d4ed8;
-      --bg-color: #f8fafc;
-      --card-bg: #ffffff;
-      --text-color: #1e293b;
-      --text-muted: #64748b;
-      --border-color: #e2e8f0;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Microsoft JhengHei", sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      padding: 40px 20px;
-      display: flex;
-      justify-content: center;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 850px;
-      background: var(--card-bg);
-      padding: 32px;
-      border-radius: 16px;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
-    }
-
-    header {
-      margin-bottom: 24px;
-    }
-
-    h1 {
-      color: var(--primary-color);
-      font-size: 1.8rem;
-      font-weight: 700;
-      margin-bottom: 6px;
-    }
-
-    .subtitle {
-      color: var(--text-muted);
-      font-size: 0.95rem;
-    }
-
-    .status-bar {
-      padding: 14px 20px;
-      background: #eff6ff;
-      border: 1px solid #bfdbfe;
-      border-radius: 10px;
-      color: #1e40af;
-      margin-bottom: 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.95rem;
-    }
-
-    .btn-primary {
-      background: var(--primary-color);
-      color: white;
-      border: none;
-      padding: 10px 18px;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: background-color 0.2s ease;
-    }
-
-    .btn-primary:hover {
-      background: var(--primary-hover);
-    }
-
-    .upload-box {
-      border: 2px dashed #cbd5e1;
-      border-radius: 12px;
-      padding: 48px 20px;
-      text-align: center;
-      background: #fafafa;
-      cursor: pointer;
-      transition: border-color 0.2s, background-color 0.2s;
-    }
-
-    .upload-box:hover {
-      border-color: var(--primary-color);
-      background-color: #f0fdf4;
-    }
-
-    .upload-title {
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin-bottom: 8px;
-      color: #334155;
-    }
-
-    .upload-desc {
-      font-size: 0.88rem;
-      color: var(--text-muted);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.5">
+    <title>USEffmpeg - 線上影片轉檔與處理系統</title>
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
+    <h1>USEffmpeg 線上影片轉檔與處理系統</h1>
+    <h3>100% 本地端處理 · 數據絕不安上傳至伺服器 (Fork 自 tejaswigowda/ffmpeg-webCLI)</h3>
 
-  <div class="container">
-    <!-- 標頭資訊 -->
-    <header>
-      <h1>USEffmpeg 線上影片轉檔系統</h1>
-      <p class="subtitle">100% 瀏覽器端 WebAssembly 處理 · 數據完全隱私不寫入伺服器</p>
-    </header>
-
-    <!-- FFmpeg 載入狀態條 -->
-    <div class="status-bar" id="status-bar">
-      <span id="status-text">FFmpeg 未載入 - 請點擊右側按鈕開始</span>
-      <button class="btn-primary" id="load-btn">載入 FFmpeg 核心 (~31 MB)</button>
+    <!-- 核心載入狀態列 -->
+    <div class="message-container">
+        <p id="message">FFmpeg 未載入 - 請點擊右側按鈕開始</p>
+        <button id="load-ffmpeg">載入 FFmpeg 核心 (~31 MB)</button>
     </div>
 
-    <!-- 檔案拖放上傳區 -->
-    <main>
-      <div class="upload-box" id="drop-zone" onclick="document.getElementById('file-input').click()">
-        <div class="upload-title">點擊選擇或將影片檔案拖放至此處</div>
-        <div class="upload-desc">支援格式：MP4, WebM, MOV, AVI, MKV, GIF, MP3, WAV 等</div>
-        <input type="file" id="file-input" style="display:none;" accept="video/*,audio/*">
-      </div>
-    </main>
-  </div>
+    <!-- 主操作區域 -->
+    <div class="main-container">
+        <label for="uploader"><b>選擇輸入影片 / 檔案：</b></label>
+        <input type="file" id="uploader" multiple>
+        
+        <br><br>
 
+        <label for="operation"><b>選擇處理功能：</b></label>
+        <select id="operation" onchange="showOptions()">
+            <option value="convert">格式轉換 (Convert)</option>
+            <option value="trim">影片剪輯 (Trim)</option>
+            <option value="compress">影片壓縮 (Compress)</option>
+            <option value="resize">解析度調整 (Resize)</option>
+            <option value="speed">播放速度調整 (Speed)</option>
+            <option value="rotate">旋轉影片 (Rotate)</option>
+            <option value="crop">影片裁切 (Crop)</option>
+            <option value="volume">音量調整 (Volume)</option>
+            <option value="extractAudio">提取音訊 (Extract Audio)</option>
+            <option value="mute">靜音 / 移除音訊 (Mute)</option>
+            <option value="subtitles">字幕內嵌 (Subtitles)</option>
+            <option value="gif">製作 GIF 動態圖 (GIF Maker)</option>
+            <option value="watermark">新增水印 (Watermark)</option>
+            <option value="reverse">倒放影片 (Reverse)</option>
+            <option value="custom">自訂 FFmpeg 命令 (Raw CLI)</option>
+        </select>
+
+        <br><br>
+
+        <!-- 動態設定參數選項區 (Options Container) -->
+        <div id="options-container">
+            <!-- 格式轉換選項 -->
+            <div id="convert-options" class="option-group">
+                <label for="output-format"><b>輸出格式：</b></label>
+                <select id="output-format">
+                    <option value="mp4">MP4</option>
+                    <option value="webm">WebM</option>
+                    <option value="mkv">MKV</option>
+                    <option value="avi">AVI</option>
+                    <option value="mov">MOV</option>
+                    <option value="gif">GIF</option>
+                    <option value="mp3">MP3</option>
+                    <option value="wav">WAV</option>
+                </select>
+            </div>
+
+            <!-- 影片剪輯選項 -->
+            <div id="trim-options" class="option-group" style="display:none;">
+                <label for="start-time"><b>起始時間 (HH:MM:SS 或 秒數)：</b></label>
+                <input type="text" id="start-time" placeholder="例如：00:00:05">
+                <br><br>
+                <label for="end-time"><b>結束時間 (HH:MM:SS 或 秒數)：</b></label>
+                <input type="text" id="end-time" placeholder="例如：00:00:15">
+            </div>
+
+            <!-- 壓縮選項 -->
+            <div id="compress-options" class="option-group" style="display:none;">
+                <label for="crf"><b>壓卡壓縮強度 (CRF 0-51，數值越高壓縮率越高、畫質越低)：</b></label>
+                <input type="number" id="crf" value="28" min="0" max="51">
+            </div>
+
+            <!-- 解析度調整選項 -->
+            <div id="resize-options" class="option-group" style="display:none;">
+                <label for="width"><b>寬度 (Width)：</b></label>
+                <input type="number" id="width" placeholder="例如：1280">
+                <label for="height"><b>高度 (Height)：</b></label>
+                <input type="number" id="height" placeholder="例如：720 (-1 為保持比例)">
+            </div>
+
+            <!-- 播放速度選項 -->
+            <div id="speed-options" class="option-group" style="display:none;">
+                <label for="speed-multiplier"><b>倍速選擇：</b></label>
+                <select id="speed-multiplier">
+                    <option value="0.5">0.5x (慢放)</option>
+                    <option value="1.0" selected>1.0x (正常)</option>
+                    <option value="1.5">1.5x (快放)</option>
+                    <option value="2.0">2.0x (雙倍速)</option>
+                </select>
+            </div>
+
+            <!-- 旋轉選項 -->
+            <div id="rotate-options" class="option-group" style="display:none;">
+                <label for="rotate-angle"><b>旋轉角度：</b></label>
+                <select id="rotate-angle">
+                    <option value="90">順時針 90 度</option>
+                    <option value="180">旋轉 180 度</option>
+                    <option value="270">逆時針 90 度 (270度)</option>
+                </select>
+            </div>
+
+            <!-- 自訂 CLI 命令 -->
+            <div id="custom-options" class="option-group" style="display:none;">
+                <label for="custom-cmd"><b>自訂指令參數 (如：-i input.mp4 -c:v libx264 output.mp4)：</b></label>
+                <input type="text" id="custom-cmd" style="width: 80%;" placeholder="請輸入 FFmpeg 參數...">
+            </div>
+        </div>
+
+        <br>
+
+        <!-- 執行按鈕與預覽區 -->
+        <button id="run-button" disabled>開始處理影片</button>
+        
+        <br><br>
+
+        <p id="output-text"></p>
+        <div id="video-container"></div>
+        <a id="download-link" style="display:none;">點擊下載處理完畢的檔案</a>
+    </div>
+
+    <script src="ffmpeg.js"></script>
+    <script src="script.js"></script>
 </body>
+
 </html>
