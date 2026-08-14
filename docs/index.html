@@ -335,19 +335,21 @@ async function loadFFmpeg() {
   const txt = document.getElementById('statusText');
   
   dot.className = 'dot loading';
-  txt.textContent = '正在載入 FFmpeg 核心 (~31 MB)...';
+  txt.textContent = '正在下載與初始化 FFmpeg 核心 (~31 MB)...';
   btn.disabled = true;
 
   ffmpeg.on('log', ({ message }) => addLog(message));
 
   try {
-    const coreBase = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm';
+    const esmBase  = 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.15/dist/esm/';
+    const coreBase = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm';
     
-    await ffmpeg.load({
-      classWorkerURL: './worker.js', // 使用本地或專案內的同源 proxy Worker
-      coreURL: `${coreBase}/ffmpeg-core.js`,
-      wasmURL: `${coreBase}/ffmpeg-core.wasm`
-    });
+    // 這裡會正確抓取你 docs 資料夾裡面的 worker.js
+    const classWorkerURL = new URL('./worker.js', location.href).href;
+    const coreURL = `${coreBase}/ffmpeg-core.js`;
+    const wasmURL = `${coreBase}/ffmpeg-core.wasm`;
+
+    await ffmpeg.load({ classWorkerURL, coreURL, wasmURL });
 
     dot.className = 'dot loaded';
     txt.textContent = 'FFmpeg 已就緒，可開始處理影片！';
