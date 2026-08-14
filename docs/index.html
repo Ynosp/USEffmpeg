@@ -31,7 +31,6 @@
 
     .container { max-width: 1100px; margin: 0 auto; }
 
-    /* Header */
     header {
       display: flex;
       justify-content: space-between;
@@ -47,7 +46,6 @@
     }
     .badge-green { background-color: #064e3b; color: #34d399; border-color: #065f46; }
 
-    /* Status Bar */
     .status-card {
       background-color: var(--card-bg);
       border: 1px solid var(--border-color);
@@ -72,7 +70,6 @@
     .btn:hover { opacity: 0.9; }
     .btn:disabled { cursor: not-allowed; opacity: 0.8; }
 
-    /* Upload Zone */
     .upload-zone {
       background-color: var(--card-bg);
       border: 2px dashed var(--border-color);
@@ -86,11 +83,12 @@
     .upload-zone:hover { border-color: var(--accent-blue); }
     .file-input { display: none; }
 
-    /* Operations Grid (原本的多功能面板) */
     .section-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 16px; }
+    
+    /* 全功能多選項網格 */
     .grid-panel {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
       gap: 12px;
       margin-bottom: 24px;
     }
@@ -98,16 +96,35 @@
       background-color: var(--card-bg);
       border: 1px solid var(--border-color);
       border-radius: 8px;
-      padding: 20px 10px;
+      padding: 18px 10px;
       text-align: center;
       cursor: pointer;
       transition: all 0.2s;
     }
-    .op-card:hover { background-color: var(--card-hover); border-color: var(--accent-blue); }
-    .op-card i { font-size: 1.8rem; margin-bottom: 8px; color: var(--accent-blue); }
+    .op-card:hover, .op-card.active { 
+      background-color: var(--card-hover); 
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+    }
+    .op-card i { font-size: 1.6rem; margin-bottom: 8px; color: var(--accent-blue); }
     .op-card span { display: block; font-size: 0.85rem; font-weight: 500; }
 
-    /* Log Box */
+    /* 控制與參數區塊 */
+    .control-box {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 6px; font-size: 0.9rem; color: var(--text-muted); }
+    select, input[type="text"], input[type="number"] {
+      width: 100%; padding: 10px; background: var(--bg-color); border: 1px solid var(--border-color);
+      border-radius: 6px; color: var(--text-main); font-size: 0.9rem;
+    }
+
     .log-box {
       background-color: #090a0f;
       border: 1px solid var(--border-color);
@@ -115,7 +132,7 @@
       padding: 16px;
       font-family: monospace;
       font-size: 0.85rem;
-      height: 150px;
+      height: 160px;
       overflow-y: auto;
       color: #a7f3d0;
       white-space: pre-wrap;
@@ -133,7 +150,7 @@
       <a href="https://github.com/Ynosp/USEffmpeg" target="_blank" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem;">GitHub 專案</a>
     </header>
 
-    <!-- 載入狀態與按鈕 -->
+    <!-- 狀態區 -->
     <div class="status-card">
       <div id="logCurrentText">🔴 FFmpeg 尚未載入 - 點擊「載入 FFmpeg」開始使用</div>
       <button class="btn" onclick="loadFFmpeg()">▶ 載入 FFmpeg (~31 MB)</button>
@@ -146,29 +163,58 @@
       <input type="file" id="fileInput" class="file-input" accept="video/*,audio/*">
     </div>
 
-    <!-- 多功能選擇面板 (Operations) -->
+    <!-- 多功能卡片選單 -->
     <div class="section-title">功能選擇 (OPERATIONS)</div>
     <div class="grid-panel">
-      <div class="op-card" onclick="runOperation('convert')">
-        <i class="fa-solid fa-arrows-rotate"></i>
+      <div class="op-card active" onclick="selectOp('convert', this)">
+        <i class="fa-solid fa-rotate"></i>
         <span>格式轉換</span>
       </div>
-      <div class="op-card" onclick="runOperation('extract_audio')">
+      <div class="op-card" onclick="selectOp('extract_audio', this)">
         <i class="fa-solid fa-music"></i>
         <span>提取音訊</span>
       </div>
-      <div class="op-card" onclick="runOperation('remove_audio')">
+      <div class="op-card" onclick="selectOp('remove_audio', this)">
         <i class="fa-solid fa-volume-xmark"></i>
         <span>消除聲音</span>
       </div>
-      <div class="op-card" onclick="runOperation('compress')">
+      <div class="op-card" onclick="selectOp('compress', this)">
         <i class="fa-solid fa-file-video"></i>
         <span>影片壓縮</span>
       </div>
-      <div class="op-card" onclick="runOperation('gif')">
+      <div class="op-card" onclick="selectOp('gif', this)">
         <i class="fa-solid fa-image"></i>
         <span>轉為 GIF</span>
       </div>
+      <div class="op-card" onclick="selectOp('rotate', this)">
+        <i class="fa-solid fa-arrows-rotate"></i>
+        <span>畫面旋轉</span>
+      </div>
+      <div class="op-card" onclick="selectOp('speed', this)">
+        <i class="fa-solid fa-gauge-high"></i>
+        <span>播放變速</span>
+      </div>
+      <div class="op-card" onclick="selectOp('cut', this)">
+        <i class="fa-solid fa-scissors"></i>
+        <span>影片剪裁</span>
+      </div>
+    </div>
+
+    <!-- 操作細節選項面板 -->
+    <div class="control-box">
+      <div class="section-title" id="optTitle">⚙️ 格式轉換設定</div>
+      <div id="optDynamicContent">
+        <div class="form-group">
+          <label for="formatSelect">選擇目標格式：</label>
+          <select id="formatSelect">
+            <option value="mp4">MP4 (H.264 / AAC)</option>
+            <option value="mkv">MKV Video</option>
+            <option value="mov">QuickTime MOV</option>
+            <option value="webm">WebM Video</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn" id="execBtn" style="width: 100%; background-color: var(--accent-green); margin-top: 10px;" onclick="runCurrentOperation()">🚀 開始處理並下載</button>
     </div>
 
     <!-- 執行日誌 -->
@@ -182,6 +228,7 @@
     const { createFFmpeg, fetchFile } = FFmpeg;
     let ffmpeg = null;
     let currentFile = null;
+    let currentOp = 'convert';
 
     function log(msg) {
       const logBox = document.getElementById("logBox");
@@ -192,7 +239,7 @@
       console.log(msg);
     }
 
-    // 載入核心
+    // 1. 載入 FFmpeg
     async function loadFFmpeg() {
       const btn = document.querySelector("button[onclick*='loadFFmpeg']");
       const statusText = document.getElementById("logCurrentText");
@@ -200,14 +247,14 @@
       try {
         if (btn) { btn.innerText = "⏳ 載入核心中..."; btn.disabled = true; }
         if (statusText) statusText.innerText = "正在下載 FFmpeg 模組 (~31 MB)...";
-        log("下載 FFmpeg 模組中...");
+        log("開始下載 FFmpeg WebAssembly 模組...");
 
         ffmpeg = createFFmpeg({ log: true });
         ffmpeg.setLogger(({ message }) => log(`[FFmpeg] ${message}`));
 
         await ffmpeg.load();
 
-        if (statusText) statusText.innerHTML = "<span style='color: #34d399;'>🟢 FFmpeg 已就緒，請上傳影片並選擇功能！</span>";
+        if (statusText) statusText.innerHTML = "<span style='color: #34d399;'>🟢 FFmpeg 已就緒，請上傳影片！</span>";
         if (btn) {
           btn.innerText = "✅ FFmpeg 已成功載入";
           btn.style.backgroundColor = "#10b981";
@@ -221,7 +268,43 @@
       }
     }
 
-    // 接收檔案
+    // 2. 切換卡片選單
+    function selectOp(op, el) {
+      currentOp = op;
+      document.querySelectorAll('.op-card').forEach(card => card.classList.remove('active'));
+      el.classList.add('active');
+
+      const title = document.getElementById('optTitle');
+      const content = document.getElementById('optDynamicContent');
+
+      if (op === 'convert') {
+        title.innerText = "⚙️ 格式轉換設定";
+        content.innerHTML = `<div class="form-group"><label>選擇目標格式：</label><select id="formatSelect"><option value="mp4">MP4</option><option value="mkv">MKV</option><option value="mov">MOV</option><option value="webm">WebM</option></select></div>`;
+      } else if (op === 'extract_audio') {
+        title.innerText = "🎵 提取音訊設定";
+        content.innerHTML = `<div class="form-group"><label>選擇音訊格式：</label><select id="audioFormatSelect"><option value="mp3">MP3</option><option value="aac">AAC</option><option value="wav">WAV</option></select></div>`;
+      } else if (op === 'remove_audio') {
+        title.innerText = "🔇 消除聲音設定";
+        content.innerHTML = `<p style="color:var(--text-muted); font-size:0.9rem;">將直接移除影片中的所有音軌。</p>`;
+      } else if (op === 'compress') {
+        title.innerText = "📉 影片壓縮設定";
+        content.innerHTML = `<div class="form-group"><label>壓縮品質 (CRF 數值，越高壓縮越大)：</label><select id="crfSelect"><option value="28">中度壓縮 (推薦)</option><option value="32">高度壓縮 (檔案極小)</option><option value="24">輕度壓縮 (高品質)</option></select></div>`;
+      } else if (op === 'gif') {
+        title.innerText = "🖼️ 轉為 GIF 設定";
+        content.innerHTML = `<div class="form-group"><label>FPS 幀率：</label><select id="gifFps"><option value="10">10 FPS (流暢度適中)</option><option value="15">15 FPS (高流暢度)</option></select></div>`;
+      } else if (op === 'rotate') {
+        title.innerText = "🔄 畫面旋轉設定";
+        content.innerHTML = `<div class="form-group"><label>旋轉方向：</label><select id="rotateSelect"><option value="1">順時針 90 度</option><option value="2">逆時針 90 度</option><option value="3">180 度翻轉</option></select></div>`;
+      } else if (op === 'speed') {
+        title.innerText = "⚡ 播放變速設定";
+        content.innerHTML = `<div class="form-group"><label>倍速：</label><select id="speedSelect"><option value="2.0">2.0x 快單</option><option value="1.5">1.5x 快單</option><option value="0.5">0.5x 慢動作</option></select></div>`;
+      } else if (op === 'cut') {
+        title.innerText = "✂️ 影片剪裁設定";
+        content.innerHTML = `<div class="form-group"><label>開始時間 (秒)：</label><input type="number" id="cutStart" value="0"><label style="margin-top:8px;">持續時間 (秒)：</label><input type="number" id="cutDuration" value="10"></div>`;
+      }
+    }
+
+    // 3. 接收檔案
     function handleSelectedFiles(files) {
       if (!files || files.length === 0) return;
       currentFile = files[0];
@@ -230,8 +313,8 @@
       log(`載入檔案: ${currentFile.name}`);
     }
 
-    // 執行各項功能
-    async function runOperation(type) {
+    // 4. 執行轉檔
+    async function runCurrentOperation() {
       if (!ffmpeg || !ffmpeg.isLoaded()) {
         alert("請先點擊上方「▶ 載入 FFmpeg」按鈕！");
         return;
@@ -241,6 +324,10 @@
         return;
       }
 
+      const execBtn = document.getElementById('execBtn');
+      execBtn.disabled = true;
+      execBtn.innerText = "⏳ 處理中，請稍候...";
+
       try {
         const inputName = "input_" + currentFile.name;
         let outputName = "output";
@@ -249,24 +336,42 @@
         log(`寫入暫存檔: ${inputName}`);
         ffmpeg.FS('writeFile', inputName, await fetchFile(currentFile));
 
-        if (type === 'convert') {
-          outputName += ".mp4";
-          args = ['-i', inputName, '-c:v', 'libx264', '-c:a', 'aac', outputName];
-        } else if (type === 'extract_audio') {
-          outputName += ".mp3";
-          args = ['-i', inputName, '-vn', '-acodec', 'libmp3lame', outputName];
-        } else if (type === 'remove_audio') {
+        if (currentOp === 'convert') {
+          const fmt = document.getElementById('formatSelect').value;
+          outputName += "." + fmt;
+          args = ['-i', inputName, outputName];
+        } else if (currentOp === 'extract_audio') {
+          const fmt = document.getElementById('audioFormatSelect').value;
+          outputName += "." + fmt;
+          args = ['-i', inputName, '-vn', outputName];
+        } else if (currentOp === 'remove_audio') {
           outputName += ".mp4";
           args = ['-i', inputName, '-an', '-vcodec', 'copy', outputName];
-        } else if (type === 'compress') {
+        } else if (currentOp === 'compress') {
+          const crf = document.getElementById('crfSelect').value;
           outputName += "_compressed.mp4";
-          args = ['-i', inputName, '-vcodec', 'h264', '-crf', '28', outputName];
-        } else if (type === 'gif') {
+          args = ['-i', inputName, '-vcodec', 'h264', '-crf', crf, outputName];
+        } else if (currentOp === 'gif') {
+          const fps = document.getElementById('gifFps').value;
           outputName += ".gif";
-          args = ['-i', inputName, '-vf', 'fps=10,scale=320:-1:flags=lance', outputName];
+          args = ['-i', inputName, '-vf', `fps=${fps},scale=320:-1:flags=lance`, outputName];
+        } else if (currentOp === 'rotate') {
+          const rot = document.getElementById('rotateSelect').value;
+          outputName += "_rotated.mp4";
+          args = ['-i', inputName, '-vf', `transpose=${rot}`, outputName];
+        } else if (currentOp === 'speed') {
+          const spd = document.getElementById('speedSelect').value;
+          outputName += "_speed.mp4";
+          let pts = 1 / parseFloat(spd);
+          args = ['-i', inputName, '-filter_complex', `[0:v]setpts=${pts}*PTS[v];[0:a]atempo=${spd}[a]`, '-map', '[v]', '-map', '[a]', outputName];
+        } else if (currentOp === 'cut') {
+          const start = document.getElementById('cutStart').value;
+          const dur = document.getElementById('cutDuration').value;
+          outputName += "_cut.mp4";
+          args = ['-ss', start, '-i', inputName, '-t', dur, '-c', 'copy', outputName];
         }
 
-        log(`開始執行指令: ffmpeg ${args.join(' ')}`);
+        log(`執行指令: ffmpeg ${args.join(' ')}`);
         await ffmpeg.run(...args);
 
         log("處理完成，準備下載...");
@@ -277,10 +382,13 @@
         a.href = url;
         a.download = outputName;
         a.click();
-        log(`匯出成功: ${outputName}`);
+        log(`成功匯出: ${outputName}`);
       } catch (err) {
         alert("執行失敗: " + err.message);
         log("錯誤: " + err.message);
+      } finally {
+        execBtn.disabled = false;
+        execBtn.innerText = "🚀 開始處理並下載";
       }
     }
 
