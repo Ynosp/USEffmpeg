@@ -93,17 +93,12 @@
     .trim-col label { font-size: 0.75rem; color: var(--muted); display: block; margin-bottom: 4px; }
     input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
     .time-val { font-size: 0.78rem; color: var(--text); text-align: center; margin-top: 2px; }
-    .timeline { position: relative; height: 32px; background: var(--surface2); border-radius: 5px; margin: 10px 0 6px; overflow: hidden; }
-    .tl-fill { position: absolute; height: 100%; background: rgba(99,102,241,.3); border-left: 2px solid var(--accent); border-right: 2px solid var(--accent); transition: left .05s, width .05s; }
-    .tl-labels { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--muted); }
 
     /* ── Op picker ── */
     .ops-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 14px; }
     .op-tile { background: var(--surface2); border: 2px solid var(--border); border-radius: 8px; padding: 9px 10px; cursor: pointer; text-align: center; font-size: 0.8rem; font-weight: 600; color: var(--muted); transition: all .15s; }
     .op-tile:hover { border-color: var(--accent); color: var(--accent); }
     .op-tile.active { border-color: var(--accent); background: rgba(99,102,241,.12); color: var(--accent); }
-    .op-tile.disabled { opacity: 0.4; cursor: not-allowed; }
-    .op-tile.disabled:hover { border-color: var(--border); color: var(--muted); }
     .op-tile i { display: block; font-size: 24px; margin-bottom: 8px; }
 
     /* ── Op panels ── */
@@ -116,14 +111,6 @@
       width: 100%; background: var(--surface); border: 1px solid var(--border);
       border-radius: 6px; color: var(--text); padding: 7px 10px; font-size: 0.83rem; outline: none;
     }
-    textarea {
-      width: 100%; background: var(--surface); border: 1px solid var(--border);
-      border-radius: 6px; color: var(--text); padding: 7px 10px; font-size: 0.78rem; outline: none;
-      font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace; resize: vertical; min-height: 76px; line-height: 1.55;
-    }
-    input:focus, select:focus, textarea:focus { border-color: var(--accent); }
-    select:disabled { opacity: 0.6; cursor: not-allowed; background: var(--surface2); }
-    .cmd-preview { font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace; font-size: 0.72rem; background: #080a10; color: #7dd3fc; padding: 10px 12px; border-radius: 6px; word-break: break-all; line-height: 1.6; margin-top: 4px; white-space: pre-wrap; min-height: 36px; }
     .hint { font-size: 0.72rem; color: var(--muted); margin-top: 6px; }
 
     /* ── Mode toggle ── */
@@ -134,15 +121,7 @@
 
     /* Batch mode */
     .batch-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 5px; font-size: 0.7rem; font-weight: 600; cursor: pointer; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); transition: all .15s; }
-    .batch-toggle:hover { background: var(--surface3); color: var(--text); }
-    .batch-toggle.active { background: var(--accent); color: #fff; border-color: var(--accent); }
     
-    /* ── Progress ── */
-    .progress-wrap { margin: 12px 0; width: 100%; }
-    .progress-header { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--muted); margin-bottom: 5px; }
-    .progress-track { height: 5px; background: var(--surface3); border-radius: 3px; overflow: hidden; width: 100%; }
-    .progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width .2s ease; width: 0%; }
-
     /* ── Log ── */
     .log-shell { background: #080a10; border-radius: 0 0 var(--r) var(--r); overflow: hidden; }
     .log { font-family: monospace; font-size: 0.73rem; background: #080a10; color: #7dd3fc; padding: 12px; height: 130px; overflow-y: auto; }
@@ -189,7 +168,7 @@
     <!-- Left: Input + Trim -->
     <div>
       <div class="card">
-        <div class="card-header">輸入影片 / 檔案<button class="batch-toggle" id="batchToggle" onclick="toggleBatchMode()"><i class="fas fa-layer-group"></i> 批次處理</button></div>
+        <div class="card-header">輸入影片 / 檔案<button class="batch-toggle" id="batchToggle"><i class="fas fa-layer-group"></i> 批次處理</button></div>
         <div class="card-body">
           <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
             <i class="fas fa-file-video" style="font-size:3rem;margin-bottom:10px;opacity:0.7"></i>
@@ -330,7 +309,7 @@
 
 </div>
 
-<!-- 完整 JavaScript 邏輯 -->
+<!-- 修正 Worker 跨網域限制的 JavaScript -->
 <script type="module">
 import { FFmpeg } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js';
 import { fetchFile } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js';
@@ -341,7 +320,6 @@ let outBlob = null;
 let outExt = 'mp4';
 let currentOp = 'convert';
 
-// ── 切換功能 Icon ──
 function setOp(op) {
   currentOp = op;
   document.querySelectorAll('.op-tile').forEach(b => b.classList.remove('active'));
@@ -350,21 +328,35 @@ function setOp(op) {
   addLog(`已選擇功能：${btn ? btn.textContent.trim() : op}`, 'ok');
 }
 
-// ── 載入 FFmpeg ──
+// ── 關鍵修復：下載跨網域 Worker 並轉為同源 Blob URL ──
+async function getBlobWorkerURL(url) {
+  const resp = await fetch(url);
+  const content = await resp.text();
+  const blob = new Blob([content], { type: 'text/javascript' });
+  return URL.createObjectURL(blob);
+}
+
+// ── 修復後的 FFmpeg 載入函數 ──
 async function loadFFmpeg() {
   const btn = document.getElementById('loadBtn');
   const dot = document.getElementById('statusDot');
   const txt = document.getElementById('statusText');
   
   dot.className = 'dot loading';
-  txt.textContent = '正在下載 FFmpeg 核心 (~31 MB)...';
+  txt.textContent = '正在下載 FFmpeg 核心與處理跨網域 Worker (~31 MB)...';
   btn.disabled = true;
 
   ffmpeg.on('log', ({ message }) => addLog(message));
 
   try {
+    const esmBase = 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm';
     const coreBase = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm';
+
+    // 解決 Failed to construct Worker 的靈魂步驟：轉成 Blob URL
+    const classWorkerURL = await getBlobWorkerURL(`${esmBase}/worker.js`);
+
     await ffmpeg.load({
+      classWorkerURL: classWorkerURL,
       coreURL: `${coreBase}/ffmpeg-core.js`,
       wasmURL: `${coreBase}/ffmpeg-core.wasm`
     });
