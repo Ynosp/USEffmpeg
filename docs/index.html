@@ -1,133 +1,1174 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.5">
-    <title>USEffmpeg - 線上影片轉檔與處理系統</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0d0f1a">
+  <meta name="description" content="USEffmpeg - 瀏覽器端線上影片轉檔與處理系統。100% 本地端處理，數據絕不安上傳至伺服器。">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="USEffmpeg">
+  <title>USEffmpeg - 線上影片轉檔與處理系統</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%235f7fe8' width='192' height='192' rx='45'/><path d='M60 80l48-28v96L60 120z' fill='%230d0f1a'/></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%235f7fe8' width='192' height='192' rx='45'/><path d='M60 80l48-28v96L60 120z' fill='%230d0f1a'/></svg>">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    :root {
+      --bg: #0d0f1a;
+      --surface: #151827;
+      --surface2: #1e2236;
+      --surface3: #252a42;
+      --accent: #3665b6;
+      --accent-h: #81e2f8;
+      --success: #70db97;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --border: #5b515f;
+      --r: 10px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, "Microsoft JhengHei", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── Header ── */
+    header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; gap: 10px; }
+    header h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.02em; }
+    .pill { font-size: 0.7rem; padding: 2px 9px; border-radius: 20px; background: rgba(99,102,241,.18); color: var(--accent); font-weight: 600; }
+    .badge-local { font-size: 0.7rem; padding: 2px 9px; border-radius: 20px; background: rgba(34,197,94,.15); color: var(--success); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+    .gh-link { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 600; color: var(--muted); text-decoration: none; padding: 5px 12px; border-radius: 7px; border: 1px solid var(--border); background: var(--surface2); transition: color .15s, border-color .15s, background .15s; white-space: nowrap; }
+    .gh-link:hover { color: var(--text); border-color: var(--accent); background: var(--surface3); }
+    @media (max-width: 600px) { .gh-link span { display: none; } .gh-link { padding: 5px 9px; } }
+
+    /* ── Layout ── */
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px 24px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+
+    /* ── Cards ── */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
+    .card + .card { margin-top: 16px; }
+    .card-header { padding: 11px 16px; border-bottom: 1px solid var(--border); font-size: 0.75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; display: flex; align-items: center; justify-content: space-between; }
+    .card-body { padding: 16px; }
+
+    /* ── Buttons ── */
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 7px; border: none; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: background .15s, opacity .15s; white-space: nowrap; }
+    .btn:disabled { opacity: .35; cursor: not-allowed; filter: blur(0.3px); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: var(--accent-h); }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-success:hover:not(:disabled) { background: #16a34a; }
+    .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover:not(:disabled) { background: var(--surface3); }
+    .btn-sm { padding: 5px 12px; font-size: 0.78rem; }
+    .btn-block { width: 100%; justify-content: center; }
+
+    /* ── Status bar ── */
+    .statusbar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 11px 16px; display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--danger); flex-shrink: 0; transition: background .3s; }
+    .dot.loaded { background: var(--success); }
+    .dot.loading { background: var(--warn); animation: blink 1s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+    #statusText { font-size: 0.82rem; color: var(--muted); }
+    .ml-auto { margin-left: auto; }
+
+    /* ── Upload zone ── */
+    .drop-zone { border: 2px dashed var(--border); border-radius: var(--r); padding: 36px 20px; text-align: center; cursor: pointer; transition: border-color .2s, background .2s; background: var(--surface2); }
+    .drop-zone:hover, .drop-zone.over { border-color: var(--accent); background: rgba(99,102,241,.07); }
+    .drop-zone svg { width: 36px; height: 36px; color: var(--muted); margin-bottom: 10px; }
+    .drop-zone p { font-size: 0.83rem; color: var(--muted); }
+    .drop-zone strong { color: var(--accent); }
+    #fileInput { display: none; }
+
+    /* ── Video ── */
+    video, audio { width: 100%; border-radius: 7px; background: #000; display: block; }
+    .file-meta { font-size: 0.78rem; color: var(--muted); margin-top: 8px; display: flex; justify-content: space-between; align-items: center; }
+
+    /* ── Trim timeline ── */
+    .trim-row { display: flex; gap: 12px; margin-top: 10px; }
+    .trim-col { flex: 1; }
+    .trim-col label { font-size: 0.75rem; color: var(--muted); display: block; margin-bottom: 4px; }
+    input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+    .time-val { font-size: 0.78rem; color: var(--text); text-align: center; margin-top: 2px; }
+    .timeline { position: relative; height: 32px; background: var(--surface2); border-radius: 5px; margin: 10px 0 6px; overflow: hidden; }
+    .tl-fill { position: absolute; height: 100%; background: rgba(99,102,241,.3); border-left: 2px solid var(--accent); border-right: 2px solid var(--accent); transition: left .05s, width .05s; }
+    .tl-labels { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--muted); }
+
+    /* ── Op picker ── */
+    .ops-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 14px; }
+    .op-tile { background: var(--surface2); border: 2px solid var(--border); border-radius: 8px; padding: 9px 10px; cursor: pointer; text-align: center; font-size: 0.8rem; font-weight: 600; color: var(--muted); transition: all .15s; }
+    .op-tile:hover { border-color: var(--accent); color: var(--accent); }
+    .op-tile.active { border-color: var(--accent); background: rgba(99,102,241,.12); color: var(--accent); }
+    .op-tile.disabled { opacity: 0.4; cursor: not-allowed; }
+    .op-tile.disabled:hover { border-color: var(--border); color: var(--muted); }
+    .op-tile i { display: block; font-size: 30px; margin-bottom: 12px; }
+
+    /* ── Op panels ── */
+    .op-panel { background: var(--surface2); border-radius: 8px; padding: 13px; margin-bottom: 14px; }
+    .op-panel h4 { font-size: 0.75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; }
+    .form-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+    .form-group { flex: 1; min-width: 110px; }
+    label.lbl { font-size: 0.78rem; color: var(--muted); display: block; margin-bottom: 4px; }
+    input[type="number"], input[type="text"], select {
+      width: 100%; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text); padding: 7px 10px; font-size: 0.83rem; outline: none;
+    }
+    textarea {
+      width: 100%; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text); padding: 7px 10px; font-size: 0.78rem; outline: none;
+      font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace; resize: vertical; min-height: 76px; line-height: 1.55;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+    select:disabled { opacity: 0.6; cursor: not-allowed; background: var(--surface2); }
+    .cmd-preview { font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace; font-size: 0.72rem; background: #080a10; color: #7dd3fc; padding: 10px 12px; border-radius: 6px; word-break: break-all; line-height: 1.6; margin-top: 4px; white-space: pre-wrap; min-height: 36px; }
+    .hint { font-size: 0.72rem; color: var(--muted); margin-top: 6px; }
+
+    /* ── Operation stack (chaining) ── */
+    .mode-toggle { display: inline-flex; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 3px; gap: 3px; margin-bottom: 12px; }
+    .mode-btn { padding: 6px 16px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; color: var(--muted); cursor: pointer; border: none; background: transparent; transition: background .15s, color .15s; }
+    .mode-btn:hover { color: var(--text); }
+    .mode-btn.active { background: var(--accent); color: #fff; }
+    .stack-empty { font-size: 0.8rem; color: var(--muted); padding: 10px 4px; text-align: center; }
+    .stack-item { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 7px; padding: 7px 9px; margin-bottom: 6px; }
+    .stack-idx { flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 0.72rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+    .stack-label { flex: 1; font-size: 0.8rem; color: var(--text); font-weight: 600; display: flex; align-items: center; gap: 7px; min-width: 0; }
+    .stack-label i { color: var(--accent); flex-shrink: 0; }
+    .stack-controls { display: inline-flex; gap: 4px; flex-shrink: 0; }
+    .stack-mini { width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); cursor: pointer; font-size: 0.72rem; display: inline-flex; align-items: center; justify-content: center; transition: color .15s, border-color .15s; }
+    .stack-mini:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); }
+
+    /* Batch mode */
+    .batch-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 5px; font-size: 0.7rem; font-weight: 600; cursor: pointer; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); transition: all .15s; }
+    .batch-toggle:hover { background: var(--surface3); color: var(--text); }
+    .batch-toggle.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .batch-queue-list { display: none; }
+    .batch-queue-list.visible { display: block; margin-top: 12px; }
+    .batch-file-item { display: flex; align-items: center; gap: 8px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; margin-bottom: 4px; font-size: 0.78rem; }
+    .batch-file-status { flex-shrink: 0; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; }
+    .batch-file-status.pending { color: var(--muted); }
+    .batch-file-status.processing { color: var(--accent); animation: blink 1s infinite; }
+    .batch-file-status.done { color: var(--success); }
+    .batch-file-status.error { color: var(--danger); }
+    .batch-file-name { flex: 1; color: var(--text); word-break: break-word; }
+    .batch-file-actions { flex-shrink: 0; display: flex; gap: 6px; }
+    .batch-btn-sm { border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 4px; padding: 4px 6px; cursor: pointer; font-size: 0.65rem; transition: 150ms; }
+    .batch-btn-sm:hover { border-color: var(--accent); color: var(--accent); background: var(--surface2); }
+    .card.disabled { opacity: 0.5; pointer-events: none; }
+    .stack-mini.danger:hover:not(:disabled) { color: var(--danger); border-color: var(--danger); }
+    .stack-mini:disabled { opacity: .3; cursor: not-allowed; }
+    .stack-note { font-size: 0.78rem; color: var(--warn); background: rgba(234,179,8,.08); border: 1px solid rgba(234,179,8,.25); border-radius: 7px; padding: 9px 11px; margin-top: 6px; display: flex; align-items: center; gap: 7px; }
+
+    .crop-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+    .crop-summary { font-size: 0.78rem; color: var(--text); font-weight: 600; }
+    .crop-editor { border: 1px solid var(--border); border-radius: 7px; background: #080a10; padding: 8px; }
+    .crop-stage { position: relative; overflow: hidden; border-radius: 5px; background: #05060a; touch-action: none; user-select: none; }
+    .crop-stage canvas { display: block; width: 100%; height: auto; }
+    .crop-empty { padding: 28px 14px; text-align: center; color: var(--muted); font-size: 0.8rem; background: var(--surface); border-radius: 5px; }
+    .crop-selection {
+      position: absolute;
+      border: 2px solid var(--accent);
+      box-shadow: 0 0 0 9999px rgba(2, 6, 23, .58);
+      cursor: move;
+      min-width: 18px;
+      min-height: 18px;
+    }
+    .crop-selection::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(to right, transparent 33.333%, rgba(255,255,255,.22) 33.333%, rgba(255,255,255,.22) calc(33.333% + 1px), transparent calc(33.333% + 1px), transparent 66.666%, rgba(255,255,255,.22) 66.666%, rgba(255,255,255,.22) calc(66.666% + 1px), transparent calc(66.666% + 1px)),
+        linear-gradient(to bottom, transparent 33.333%, rgba(255,255,255,.22) 33.333%, rgba(255,255,255,.22) calc(33.333% + 1px), transparent calc(33.333% + 1px), transparent 66.666%, rgba(255,255,255,.22) 66.666%, rgba(255,255,255,.22) calc(66.666% + 1px), transparent calc(66.666% + 1px));
+    }
+    .crop-handle {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid var(--surface);
+      background: var(--accent);
+      box-shadow: 0 0 0 1px rgba(255,255,255,.25);
+    }
+    .crop-handle[data-handle="nw"] { left: -7px; top: -7px; cursor: nwse-resize; }
+    .crop-handle[data-handle="n"]  { left: 50%; top: -7px; transform: translateX(-50%); cursor: ns-resize; }
+    .crop-handle[data-handle="ne"] { right: -7px; top: -7px; cursor: nesw-resize; }
+    .crop-handle[data-handle="e"]  { right: -7px; top: 50%; transform: translateY(-50%); cursor: ew-resize; }
+    .crop-handle[data-handle="se"] { right: -7px; bottom: -7px; cursor: nwse-resize; }
+    .crop-handle[data-handle="s"]  { left: 50%; bottom: -7px; transform: translateX(-50%); cursor: ns-resize; }
+    .crop-handle[data-handle="sw"] { left: -7px; bottom: -7px; cursor: nesw-resize; }
+    .crop-handle[data-handle="w"]  { left: -7px; top: 50%; transform: translateY(-50%); cursor: ew-resize; }
+
+    /* ── Progress ── */
+    .progress-wrap { margin: 12px 0; width: 100%; }
+    .progress-header { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--muted); margin-bottom: 5px; }
+    .progress-track { height: 5px; background: var(--surface3); border-radius: 3px; overflow: hidden; width: 100%; }
+    .progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width .2s ease; width: 0%; }
+
+    /* ── Log ── */
+    .log-shell { background: #080a10; border-radius: 0 0 var(--r) var(--r); overflow: hidden; }
+    .log-current {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+      font-size: 0.73rem;
+      line-height: 1.55;
+      padding: 10px 12px;
+      background: #0f1420;
+      border-bottom: 1px solid rgba(129, 226, 248, 0.16);
+      color: #e2e8f0;
+    }
+    .log-current-label { color: #94a3b8; margin-right: 8px; }
+    .log-current-value { color: #7dd3fc; word-break: break-all; }
+    .log { font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace; font-size: 0.73rem; background: #080a10; color: #7dd3fc; padding: 12px; height: 130px; overflow-y: auto; line-height: 1.55; }
+    .log-line { word-break: break-all; }
+    .log-line.err { color: #fca5a5; }
+    .log-line.ok  { color: #86efac; }
+
+    /* ── Output ── */
+    .out-empty { text-align: center; padding: 28px; font-size: 0.83rem; color: var(--muted); }
+    .out-actions { display: flex; gap: 10px; margin-top: 12px; align-items: center; flex-wrap: wrap; }
+    .out-size { font-size: 0.78rem; color: var(--muted); }
+
+    .size-estimate { background: var(--surface2); border-radius: 7px; padding: 9px 14px; font-size: 0.82rem; color: var(--muted); display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .size-estimate strong { color: var(--text); font-size: 0.88rem; }
+    .size-delta { font-size: 0.75rem; font-weight: 600; }
+    .size-delta.smaller { color: var(--success); }
+    .size-delta.larger  { color: var(--danger); }
+
+    .hidden { display: none !important; }
+    .tag { font-size: 0.7rem; font-weight: 600; padding: 1px 7px; border-radius: 4px; background: rgba(99,102,241,.18); color: var(--accent); margin-left: 6px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 480px) {
+      header { padding: 10px 14px; }
+      header h1 { font-size: 1rem; }
+
+      .container { padding: 10px 12px; }
+
+      .statusbar { flex-wrap: wrap; padding: 10px 12px; gap: 8px; }
+      .statusbar .ml-auto { margin-left: 0; width: 100%; }
+      .statusbar .btn { width: 100%; justify-content: center; }
+
+      .card-body { padding: 12px; }
+      .card-header { padding: 9px 12px; }
+
+      .drop-zone { padding: 24px 14px; }
+
+      .trim-row { flex-direction: column; gap: 6px; }
+
+      .ops-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+      .op-tile { padding: 8px 6px; font-size: 0.74rem; }
+
+      .form-row { gap: 6px; }
+      .form-group { min-width: 0; flex-basis: calc(50% - 3px); }
+      .crop-toolbar { align-items: flex-start; }
+      .crop-summary { flex: 1 1 100%; }
+      .crop-handle { width: 16px; height: 16px; }
+      .crop-handle[data-handle="nw"] { left: -9px; top: -9px; }
+      .crop-handle[data-handle="n"]  { top: -9px; }
+      .crop-handle[data-handle="ne"] { right: -9px; top: -9px; }
+      .crop-handle[data-handle="e"]  { right: -9px; }
+      .crop-handle[data-handle="se"] { right: -9px; bottom: -9px; }
+      .crop-handle[data-handle="s"]  { bottom: -9px; }
+      .crop-handle[data-handle="sw"] { left: -9px; bottom: -9px; }
+      .crop-handle[data-handle="w"]  { left: -9px; }
+
+      .size-estimate { flex-wrap: wrap; gap: 4px; }
+
+      .log-current { font-size: 0.68rem; padding: 9px 10px; }
+      .log { height: 90px; font-size: 0.68rem; padding: 10px; }
+
+      .out-actions { flex-direction: column; align-items: stretch; }
+      .out-actions .btn { justify-content: center; }
+      .out-actions .out-size { text-align: center; }
+    }
+
+    @media (max-width: 380px) {
+      .ops-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+
+    /* ── Raw FFmpeg example library ── */
+    .raw-examples-details { border: 1px solid var(--border); border-radius: 7px; overflow: hidden; margin-bottom: 10px; }
+    .raw-examples-details summary { padding: 8px 11px; cursor: pointer; font-size: 0.75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; user-select: none; list-style: none; display: flex; align-items: center; gap: 6px; background: var(--surface3); }
+    .raw-examples-details summary::-webkit-details-marker { display: none; }
+    .raw-examples-details summary::marker { display: none; }
+    .rex-arrow { display: inline-block; font-style: normal; transition: transform .18s; font-size: 0.7rem; }
+    .raw-examples-details[open] .rex-arrow { transform: rotate(90deg); }
+    .rex-list { padding: 7px; display: grid; gap: 5px; background: var(--surface2); }
+    .raw-example-btn { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; cursor: pointer; text-align: left; display: flex; align-items: baseline; gap: 10px; transition: border-color .15s, background .15s; }
+    .raw-example-btn:hover { border-color: var(--accent); background: rgba(99,102,241,.07); }
+    .rex-label { font-size: 0.8rem; font-weight: 600; color: var(--text); white-space: nowrap; flex-shrink: 0; }
+    .rex-code { font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace; font-size: 0.7rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+    /* ── Raw example "+2nd file" badge ── */
+    .rex-input2-badge { font-size: 0.68rem; font-weight: 700; padding: 1px 6px; border-radius: 4px; background: rgba(245,158,11,.18); color: var(--warn); white-space: nowrap; flex-shrink: 0; }
+    @keyframes input2-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,0); } 30% { box-shadow: 0 0 0 3px rgba(245,158,11,.55); } }
+    .input2-highlight { animation: input2-pulse 1s ease; border-radius: 7px; }
+  </style>
 </head>
-
 <body>
-    <h1>USEffmpeg 線上影片轉檔與處理系統</h1>
-    <h3>100% 本地端處理 · 數據絕不安上傳至伺服器 (Fork 自 tejaswigowda/ffmpeg-webCLI)</h3>
 
-    <!-- 核心載入狀態列 -->
-    <div class="message-container">
-        <p id="message">FFmpeg 未載入 - 請點擊右側按鈕開始</p>
-        <button id="load-ffmpeg">載入 FFmpeg 核心 (~31 MB)</button>
-    </div>
+<header>
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M15 10l4.553-2.069A1 1 0 0121 8.871v6.258a1 1 0 01-1.447.894L15 14"/>
+    <rect x="2" y="6" width="13" height="12" rx="2"/>
+  </svg>
+  <h1>USEffmpeg</h1>
+  <span class="pill">離線優先</span>
+  <span class="badge-local">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+    100% 本地處理 · 數據絕不上傳至伺服器
+  </span>
+  <a class="gh-link" href="https://github.com/Ynosp/USEffmpeg" target="_blank" rel="noopener">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.604-3.369-1.341-3.369-1.341-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844a9.59 9.59 0 012.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+    <span>Fork on GitHub</span>
+  </a>
+</header>
 
-    <!-- 主操作區域 -->
-    <div class="main-container">
-        <label for="uploader"><b>選擇輸入影片 / 檔案：</b></label>
-        <input type="file" id="uploader" multiple>
-        
-        <br><br>
+<div class="container">
 
-        <label for="operation"><b>選擇處理功能：</b></label>
-        <select id="operation" onchange="showOptions()">
-            <option value="convert">格式轉換 (Convert)</option>
-            <option value="trim">影片剪輯 (Trim)</option>
-            <option value="compress">影片壓縮 (Compress)</option>
-            <option value="resize">解析度調整 (Resize)</option>
-            <option value="speed">播放速度調整 (Speed)</option>
-            <option value="rotate">旋轉影片 (Rotate)</option>
-            <option value="crop">影片裁切 (Crop)</option>
-            <option value="volume">音量調整 (Volume)</option>
-            <option value="extractAudio">提取音訊 (Extract Audio)</option>
-            <option value="mute">靜音 / 移除音訊 (Mute)</option>
-            <option value="subtitles">字幕內嵌 (Subtitles)</option>
-            <option value="gif">製作 GIF 動態圖 (GIF Maker)</option>
-            <option value="watermark">新增水印 (Watermark)</option>
-            <option value="reverse">倒放影片 (Reverse)</option>
-            <option value="custom">自訂 FFmpeg 命令 (Raw CLI)</option>
-        </select>
+  <!-- Status -->
+  <div class="statusbar">
+    <div class="dot" id="statusDot"></div>
+    <span id="statusText">FFmpeg 未載入 - 請點擊「載入 FFmpeg」開始使用</span>
+    <button class="btn btn-primary ml-auto" id="loadBtn" onclick="loadFFmpeg()"><i class="fas fa-play"></i> 載入 FFmpeg (~31 MB)</button>
+  </div>
 
-        <br><br>
+  <div class="grid">
 
-        <!-- 動態設定參數選項區 (Options Container) -->
-        <div id="options-container">
-            <!-- 格式轉換選項 -->
-            <div id="convert-options" class="option-group">
-                <label for="output-format"><b>輸出格式：</b></label>
-                <select id="output-format">
-                    <option value="mp4">MP4</option>
-                    <option value="webm">WebM</option>
-                    <option value="mkv">MKV</option>
-                    <option value="avi">AVI</option>
-                    <option value="mov">MOV</option>
-                    <option value="gif">GIF</option>
-                    <option value="mp3">MP3</option>
-                    <option value="wav">WAV</option>
-                </select>
+    <!-- ── Left: Input + Trim ── -->
+    <div>
+      <div class="card">
+        <div class="card-header">輸入影片 / 檔案<button class="batch-toggle" id="batchToggle" onclick="toggleBatchMode()" title="批次處理多個檔案"><i class="fas fa-layer-group"></i> 批次處理</button></div>
+        <div class="card-body">
+          <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+            <i class="fas fa-file-video" style="font-size:3rem;margin-bottom:10px;opacity:0.7"></i>
+            <p id="dropZoneText"><strong>點擊選擇檔案</strong> 或將本地影片拖放至此處</p>
+            <p style="margin-top:5px;font-size:.72rem">支援：MP4, WebM, MOV, AVI, MKV, GIF 等</p>
+          </div>
+          <input type="file" id="fileInput" accept="video/*,image/gif" onchange="handleFileInput(this)">
+          <div id="inputWrap" class="hidden" style="margin-top:12px">
+            <video id="inputVideo" controls></video>
+            <div class="file-meta">
+              <span id="inputMeta"></span>
+              <button class="btn btn-ghost btn-sm" onclick="clearInput()"><i class="fas fa-xmark"></i> 移除檔案</button>
             </div>
-
-            <!-- 影片剪輯選項 -->
-            <div id="trim-options" class="option-group" style="display:none;">
-                <label for="start-time"><b>起始時間 (HH:MM:SS 或 秒數)：</b></label>
-                <input type="text" id="start-time" placeholder="例如：00:00:05">
-                <br><br>
-                <label for="end-time"><b>結束時間 (HH:MM:SS 或 秒數)：</b></label>
-                <input type="text" id="end-time" placeholder="例如：00:00:15">
+          </div>
+          <div class="batch-queue-list" id="batchQueueList">
+            <div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px" id="batchQueueCounter">佇列中共有 0 個檔案</div>
+            <div id="batchQueueItems"></div>
+            <div style="display:flex;gap:6px;margin-top:8px">
+              <button class="btn btn-ghost btn-sm" onclick="clearBatchQueue()" style="flex:1"><i class="fas fa-trash"></i> 清空佇列</button>
             </div>
-
-            <!-- 壓縮選項 -->
-            <div id="compress-options" class="option-group" style="display:none;">
-                <label for="crf"><b>壓卡壓縮強度 (CRF 0-51，數值越高壓縮率越高、畫質越低)：</b></label>
-                <input type="number" id="crf" value="28" min="0" max="51">
-            </div>
-
-            <!-- 解析度調整選項 -->
-            <div id="resize-options" class="option-group" style="display:none;">
-                <label for="width"><b>寬度 (Width)：</b></label>
-                <input type="number" id="width" placeholder="例如：1280">
-                <label for="height"><b>高度 (Height)：</b></label>
-                <input type="number" id="height" placeholder="例如：720 (-1 為保持比例)">
-            </div>
-
-            <!-- 播放速度選項 -->
-            <div id="speed-options" class="option-group" style="display:none;">
-                <label for="speed-multiplier"><b>倍速選擇：</b></label>
-                <select id="speed-multiplier">
-                    <option value="0.5">0.5x (慢放)</option>
-                    <option value="1.0" selected>1.0x (正常)</option>
-                    <option value="1.5">1.5x (快放)</option>
-                    <option value="2.0">2.0x (雙倍速)</option>
-                </select>
-            </div>
-
-            <!-- 旋轉選項 -->
-            <div id="rotate-options" class="option-group" style="display:none;">
-                <label for="rotate-angle"><b>旋轉角度：</b></label>
-                <select id="rotate-angle">
-                    <option value="90">順時針 90 度</option>
-                    <option value="180">旋轉 180 度</option>
-                    <option value="270">逆時針 90 度 (270度)</option>
-                </select>
-            </div>
-
-            <!-- 自訂 CLI 命令 -->
-            <div id="custom-options" class="option-group" style="display:none;">
-                <label for="custom-cmd"><b>自訂指令參數 (如：-i input.mp4 -c:v libx264 output.mp4)：</b></label>
-                <input type="text" id="custom-cmd" style="width: 80%;" placeholder="請輸入 FFmpeg 參數...">
-            </div>
+          </div>
         </div>
+      </div>
 
-        <br>
-
-        <!-- 執行按鈕與預覽區 -->
-        <button id="run-button" disabled>開始處理影片</button>
-        
-        <br><br>
-
-        <p id="output-text"></p>
-        <div id="video-container"></div>
-        <a id="download-link" style="display:none;">點擊下載處理完畢的檔案</a>
+      <!-- Trim -->
+      <div class="card" id="trimCard">
+        <div class="card-header">
+          影片剪輯 (Trim) <span class="tag">套用至所有操作</span>
+          <span class="tag" id="batchTrimWarning" style="background:#d97706;display:none;margin-left:8px;">批次模式下已停用</span>
+        </div>
+        <div class="card-body">
+          <p class="hint" style="margin-bottom:8px">拖曳滑桿設定起始與結束時間。保持預設則保留完整影片。</p>
+          <div class="trim-row">
+            <div class="trim-col">
+              <label>起始時間</label>
+              <input type="range" id="trimStart" min="0" max="100" step="0.1" value="0" oninput="updateTrim()">
+              <div class="time-val" id="startVal">0:00.0</div>
+            </div>
+            <div class="trim-col">
+              <label>結束時間</label>
+              <input type="range" id="trimEnd" min="0" max="100" step="0.1" value="100" oninput="updateTrim()">
+              <div class="time-val" id="endVal">0:00.0</div>
+            </div>
+          </div>
+          <div class="timeline"><div class="tl-fill" id="tlFill"></div></div>
+          <div class="tl-labels">
+            <span>0:00</span>
+            <span id="trimDur">選擇長度</span>
+            <span id="vidDur">--:--</span>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <script src="ffmpeg.js"></script>
-    <script src="script.js"></script>
-</body>
+    <!-- ── Right: Operations + Output ── -->
+    <div>
+      <div class="card">
+        <div class="card-header">處理功能選擇</div>
+        <div class="card-body">
 
+          <!-- Mode toggle: single op vs. operation stack -->
+          <div class="mode-toggle" role="tablist" aria-label="Processing mode">
+            <button class="mode-btn active" id="modeSingle" onclick="setMode('single')"><i class="fas fa-square"></i> 單一模式</button>
+            <button class="mode-btn" id="modeStack" onclick="setMode('stack')"><i class="fas fa-layer-group"></i> 組合堆疊 (鏈式處理)</button>
+          </div>
+
+          <!-- Op tiles -->
+          <div class="ops-grid">
+            <button class="op-tile active" id="op-convert"       onclick="setOp('convert')"><i class="fas fa-arrows-rotate"></i> 格式轉換</button>
+            <button class="op-tile" id="op-resizecompress" onclick="setOp('resizecompress')"><i class="fas fa-compress"></i> 縮放與壓縮</button>
+            <button class="op-tile" id="op-audio"         onclick="setOp('audio')"><i class="fas fa-music"></i> 提取音訊</button>
+            <button class="op-tile" id="op-mute"          onclick="setOp('mute')"><i class="fas fa-volume-xmark"></i> 靜音 / 移除音訊</button>
+            <button class="op-tile" id="op-gif"           onclick="setOp('gif')"><i class="fas fa-film"></i> 製作 GIF</button>
+            <button class="op-tile" id="op-speed"         onclick="setOp('speed')"><i class="fas fa-bolt"></i> 速度調整</button>
+            <button class="op-tile" id="op-rotate"        onclick="setOp('rotate')"><i class="fas fa-rotate-right"></i> 旋轉 / 鏡像</button>
+            <button class="op-tile" id="op-crop"          onclick="setOp('crop')"><i class="fas fa-crop-simple"></i> 畫面裁切</button>
+            <button class="op-tile" id="op-thumbnail"     onclick="setOp('thumbnail')"><i class="fas fa-image"></i> 擷取縮圖</button>
+            <button class="op-tile" id="op-reverse"       onclick="setOp('reverse')"><i class="fas fa-backward"></i> 倒放影片</button>
+            <button class="op-tile" id="op-fade"          onclick="setOp('fade')"><i class="fas fa-circle-half-stroke"></i> 淡入 / 淡出</button>
+            <button class="op-tile" id="op-adjust"        onclick="setOp('adjust')"><i class="fas fa-sliders"></i> 色彩微調</button>
+            <button class="op-tile" id="op-stripmeta"     onclick="setOp('stripmeta')"><i class="fas fa-ban"></i> 清除元數據</button>
+            <button class="op-tile" id="op-autocaption"   onclick="setOp('autocaption')"><i class="fas fa-microphone-lines"></i> 自動字幕</button>
+            <button class="op-tile" id="op-subtitles"     onclick="setOp('subtitles')"><i class="fas fa-closed-captioning"></i> 內嵌字幕</button>
+            <button class="op-tile" id="op-volume"        onclick="setOp('volume')"><i class="fas fa-volume-high"></i> 音量調整</button>
+            <button class="op-tile" id="op-loop"          onclick="setOp('loop')"><i class="fas fa-repeat"></i> 重複循環</button>
+            <button class="op-tile" id="op-overlay"       onclick="setOp('overlay')"><i class="fas fa-stamp"></i> 水印標籤</button>
+            <button class="op-tile" id="op-mixaudio"      onclick="setOp('mixaudio')"><i class="fas fa-headphones"></i> 混音 / 背景音樂</button>
+            <button class="op-tile" id="op-concat"        onclick="setOp('concat')"><i class="fas fa-link"></i> 影片合併</button>
+            <button class="op-tile" id="op-sxs"           onclick="setOp('sxs')"><i class="fas fa-table-columns"></i> 並排分割畫面</button>
+            <button class="op-tile" id="op-pip"           onclick="setOp('pip')"><i class="fas fa-clone"></i> 画中画 (PIP)</button>
+            <button class="op-tile" id="op-info"          onclick="setOp('info')"><i class="fas fa-circle-info"></i> 媒體詳細資訊</button>
+            <button class="op-tile" id="op-pad"           onclick="setOp('pad')"><i class="fas fa-expand"></i> 填補邊框</button>
+            <button class="op-tile" id="op-normalize"     onclick="setOp('normalize')"><i class="fas fa-wave-square"></i> 音量標準化</button>
+            <button class="op-tile" id="op-denoise"       onclick="setOp('denoise')"><i class="fas fa-broom"></i> 降噪處理</button>
+            <button class="op-tile" id="op-boomerang"     onclick="setOp('boomerang')"><i class="fas fa-retweet"></i> 迴旋鏢 (Boomerang)</button>
+            <button class="op-tile" id="op-sharpenblur"   onclick="setOp('sharpenblur')"><i class="fas fa-eye"></i> 銳化 / 模糊</button>
+            <button class="op-tile" id="op-raw"           onclick="setOp('raw')"><i class="fas fa-terminal"></i> 自訂 FFmpeg 命令</button>
+          </div>
+
+          <!-- Convert -->
+          <div class="op-panel" id="panel-convert">
+            <h4>格式轉換</h4>
+            <div class="form-row">
+              <div class="form-group" style="color:var(--muted);font-size:.9rem">
+                <p>請使用下方「輸出格式」下拉選單選擇欲轉換的格式。</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Resize & Compress -->
+          <div class="op-panel hidden" id="panel-resizecompress">
+            <h4>解析度縮放與壓縮</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="lbl">寬度 (px)</label>
+                <input type="number" id="rcW" placeholder="自動" oninput="updateSizeEstimate()">
+              </div>
+              <div class="form-group">
+                <label class="lbl">高度 (px)</label>
+                <input type="number" id="rcH" placeholder="自動" oninput="updateSizeEstimate()">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="lbl">畫質強度 (CRF)</label>
+                <input type="range" id="rcCrf" min="18" max="51" value="28" step="1" oninput="document.getElementById('rcCrfVal').textContent=this.value; updateSizeEstimate()">
+                <div class="time-val"><span id="rcCrfVal">28</span> <span style="color:var(--muted);font-size:.7rem">(18=最高畫質 · 28=預設 · 51=最低畫質)</span></div>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="lbl">編碼預設值 (Preset)</label>
+                <select id="rcPreset" onchange="updateSizeEstimate()">
+                  <option value="ultrafast">ultrafast - 最快編碼</option>
+                  <option value="fast">fast - 快速</option>
+                  <option value="medium" selected>medium - 平衡</option>
+                  <option value="slow">slow - 較佳壓縮比</option>
+                  <option value="veryslow">veryslow - 最佳壓縮比</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="lbl">輸出格式</label>
+                <select id="rcFmt" onchange="updateSizeEstimate()">
+                  <option value="mp4">MP4</option>
+                  <option value="mkv">MKV</option>
+                </select>
+              </div>
+            </div>
+            <p class="hint">預設會自動帶入原始影片尺寸。清空欄位或填入 -1 可保持原始縱橫比。CRF 數值越低畫質越高。</p>
+          </div>
+
+          <!-- Audio -->
+          <div class="op-panel hidden" id="panel-audio">
+            <h4>提取音訊軌道</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="lbl">音訊格式</label>
+                <select id="audioFmt" onchange="updateSizeEstimate()">
+                  <option value="mp3">MP3</option>
+                  <option value="aac">AAC</option>
+                  <option value="wav">WAV (無損未壓縮)</option>
+                  <option value="ogg">OGG Vorbis</option>
+                  <option value="flac">FLAC (無損壓縮)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mute -->
+          <div class="op-panel hidden" id="panel-mute">
+            <h4>移除音訊軌道 (靜音)</h4>
+            <p class="hint" style="font-size:.82rem;color:var(--text)">輸出檔案將保留影片畫面並完全移除聲音軌道。</p>
+          </div>
+
+          <!-- GIF -->
+          <div class="op-panel hidden" id="panel-gif">
+            <h4>製作 GIF 動態圖</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="lbl">幀率 (FPS)</label>
+                <input type="number" id="gifFps" value="10" min="1" max="30" oninput="updateSizeEstimate()">
+              </div>
+              <div class="form-group">
+                <label class="lbl">寬度 (px)</label>
+                <input type="number" id="gifW" value="480" min="64" oninput="updateSizeEstimate()">
+              </div>
+            </div>
+            <p class="hint">高度將依據原始比例自動計算。</p>
+          </div>
+
+          <!-- Speed -->
+          <div class="op-panel hidden" id="panel-speed">
+            <h4>播放速度調整</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="lbl">倍速選擇</label>
+                <select id="speedVal" onchange="updateSizeEstimate()">
+                  <option value="0.25">0.25× - 慢動作</option>
+                  <option value="0.5">0.5× - 半速</option>
+                  <option value="0.75">0.75× - 減速</option>
+                  <option value="1.5">1.5× - 加速</option>
+                  <option value="2" selected>2× - 雙倍速</option>
+                  <option value="4">4× - 快進</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rotate / Flip -->
+          <div class="op-panel hidden" id="panel-rotate">
+            <h4>旋轉與鏡像</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="lbl">變形模式</label>
+                <select id="rotateVal">
+                  <option value="cw90">順時針旋轉 90°</option>
+                  <option value="ccw90">逆時針旋轉 90°</option>
+                  <option value="180">旋轉 180°</option>
+                  <option value="hflip">水平鏡像 (左右翻轉)</option>
+                  <option value="vflip">垂直鏡像 (上下翻轉)</option>
+                  <option value="hvflip">雙向翻轉 (180°)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Crop -->
+          <div class="op-panel hidden" id="panel-crop">
+            <h4>畫面裁切</h4>
+            <div class="crop-toolbar">
+              <div class="crop-summary" id="cropSummary">請載入影片以進行裁切。</div>
+              <button class="btn btn-ghost btn-sm" type="button" onclick="resetCropSelection()"><i class="fas fa-rotate-left"></i> 重置裁切區</button>
+            </div>
+            <div class="crop-editor">
+              <div class="crop-stage" id="cropStage">
+                <canvas id="cropCanvas" class="hidden"></canvas>
+                <div class="crop-selection hidden" id="cropSelection" aria-label="Crop selection">
+                  <span class="crop-handle" data-handle="nw"></span>
+                  <span class="crop-handle" data-handle="n"></span>
+                  <span class="crop-handle" data-handle="ne"></span>
+                  <span class="crop-handle" data-handle="e"></span>
+                  <span class="crop-handle" data-handle="se"></span>
+                  <span class="crop-handle" data-handle="s"></span>
+                  <span class="crop-handle" data-handle="sw"></span>
+                  <span class="crop-handle" data-handle="w"></span>
+                </div>
+                <div class="crop-empty" id="cropEmpty">請載入影片以預覽裁切區域。</div>
+              </div>
+            </div>
+            <input type="hidden" id="cropX" value="0">
+            <input type="hidden" id="cropY" value="0">
+            <input type="hidden" id="cropW">
+            <input type="hidden" id="cropH">
+            <p class="hint">拖曳方框可移動位置，拖曳控制點可調整裁切尺寸。</p>
+          </div>
+
+          <!-- Thumbnail -->
+          <div class="op-panel hidden" id="panel-thumbnail">
+            <h4>擷取影片縮圖</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="lbl">時間點 (秒)</label>
+                <input type="number" id="thumbTime" value="0" min="0" step="0.1">
+              </div>
+              <div class="form-group">
+                <label class="lbl">圖片格式</label>
+                <select id="thumbFmt">
+                  <option value="jpg">JPEG</option>
+                  <option value="png">PNG (無損)</option>
+                </select>
+              </div>
+            </div>
+            <p class="hint">擷取指定時間點的單一影格畫面並儲存為圖片檔。</p>
+          </div>
+
+          <!-- Reverse -->
+          <div class="op-panel hidden" id="panel-reverse">
+            <h4>倒放影片</h4>
+            <p class="hint" style="font-size:.82rem;color:var(--text)">反向播放影片與音訊。此操作需將畫面暫存於記憶體中，建議處理 2 分鐘以內的短片。</p>
+          </div>
+
+          <!-- Fade -->
+          <div class="op-panel hidden" id="panel-fade">
+            <h4>淡入 / 淡出效果</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="lbl">淡入時間 (秒)</label>
+                <input type="number" id="fadeIn" value="1" min="0" step="0.1">
+              </div>
+              <div class="form-group">
+                <label class="lbl">淡出時間 (秒)</label>
+                <input type="number" id="fadeOut" value="1" min="0" step="0.1">
+              </div>
+            </div>
+            <p class="hint">填入 0 表示不套用該方向效果。效果將於剪輯設定後套用。</p>
+          </div>
+
+          <!-- Adjust -->
+          <div class="op-panel hidden" id="panel-adjust">
+            <h4>色彩與畫質微調</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="lbl">亮度 (Brightness)</label>
+                <input type="range" id="adjBright" min="-1" max="1" value="0" step="0.05" oninput="document.getElementById('adjBrightVal').textContent=this.value">
+                <div class="time-val"><span id="adjBrightVal">0</span></div>
+              </div>
+              <div class="form-group">
+                <label class="lbl">對比度 (Contrast)</label>
+                <input type="range" id="adjContrast" min="0" max="2" value="1" step="0.05" oninput="document.getElementById('adjContrastVal').textContent=this.value">
+                <div class="time-val"><span id="adjContrastVal">1</span></div>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="lbl">飽和度 (Saturation)</label>
+                <input type="range" id="adjSat" min="0" max="3" value="1" step="0.05" oninput="document.getElementById('adjSatVal').textContent=this.value">
+                <div class="time-val"><span id="adjSatVal">1</span></div>
+              </div>
+              <div class="form-group" style="display:flex;align-items:center;gap:8px;padding-top:18px">
+                <input type="checkbox" id="adjGray" style="width:auto;accent-color:var(--accent)">
+                <label class="lbl" for="adjGray" style="margin:0;cursor:pointer">轉換為黑白 (灰階)</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Strip Metadata -->
+          <div class="op-panel hidden" id="panel-stripmeta">
+            <h4>清除檔案元數據 (Metadata)</h4>
+            <p class="hint" style="font-size:.82rem;color:var(--text)">移除所有嵌入的元數據（例如 GPS 定位、相機資訊、拍攝日期等），保護個人隱私。</p>
+          </div>
+
+          <!-- Embed Subtitles -->
+          <div class="op-panel hidden" id="panel-subtitles">
+            <h4>內嵌字幕檔</h4>
+            <div style="margin-bottom:10px">
+              <label class="lbl">字幕檔案 <span style="font-weight:400;color:var(--muted)">(支援 SRT, VTT, ASS)</span></label>
+              <div style="display:flex;align-items:center;gap:8px">
+                <button class="btn btn-ghost btn-sm" onclick="document.getElementById('subtitleFileInput').click()"><i class="fas fa-folder-open"></i> 選擇檔案</button>
+                <span id="subtitleFileName" style="font-size:0.78rem;color:var(--muted)">尚未選擇檔案</span>
+                <input type="file" id="subtitleFileInput" style="display:none" accept=".srt,.vtt,.ass,.ssa" onchange="onSubtitleFileChange(this)">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="lbl">輸出格式</label>
+                <select id="subsFmt">
+                  <option value="mp4">MP4</option>
+                  <option value="mkv">MKV</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin-bottom:10px">
+              <label style="font-size:0.78rem;color:var(--muted);display:block;margin-bottom:8px"><strong>字幕壓制方式</strong></label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:0.78rem;cursor:pointer;margin-bottom:6px">
+                <input type="radio" name="subsBurnMethod" id="subsSoftEmbed" value="soft" checked style="cursor:pointer">
+                <span>軟字幕 (Soft Subtitles) - 速度快，播放時可切換開啟/關閉</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:0.78rem;cursor:pointer">
+                <input type="radio" name="subsBurnMethod" id="subsHardBurn" value="burn" style="cursor:pointer">
+                <span>硬字幕燒錄 (Hard-burn) - 速度較慢，直接燒錄於畫面中，相容性最高</span>
+              </label>
+              <p class="hint" style="margin-top:6px">軟字幕推薦於 VLC 與瀏覽器播放；硬字幕適合社群平台分享。</p>
+            </div>
+            <div class="form-group" style="margin-bottom:10px">
+              <label class="lbl">字幕字型大小 <span style="font-weight:400;color:var(--muted)">(僅限硬字幕燒錄)</span></label>
+              <select id="subsFontSize">
+                <option value="small">小 (Small)</option>
+                <option value="medium" selected>中 (Medium)</option>
+                <option value="large">大 (Large)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Auto-Caption (Whisper-powered speech-to-text) -->
+          <div class="op-panel hidden" id="panel-autocaption">
+            <h4>自動語音辨識字幕 (Whisper AI)</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="lbl">Whisper AI 模型</label>
+                <select id="autoCaptionModel" onchange="updateAutoCaptionInfo()">
+                  <option value="tiny" selected>Tiny (39 MB) - 超快速、基礎精準度</option>
+                  <option value="base">Base (140 MB) - 平衡推薦</option>
+                  <option value="small">Small (466 MB) - 高精準度、速度較慢</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="lbl">輸出格式</label>
+                <select id="autoCaptionFmt">
+                  <option value="mp4">MP4</option>
+                  <option value="mkv">MKV</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin-bottom:10px">
+              <label style="display:flex;align-items:center;gap:8px;font-size:0.78rem;cursor:pointer">
+                <input type="checkbox" id="autoCaptionBurn" style="width:16px;height:16px;cursor:pointer">
+                <span>將字幕直接燒錄於影片畫面中 (需重新編碼，速度較慢)</span>
+              </label>
+              <p class="hint" style="margin:6px 0 0 24px">未勾選：快速，以軟字幕軌道內嵌。勾選：燒錄至畫面中。</p>
+              <div class="form-group" style="margin:10px 0 0 24px">
+                <label class="lbl">字幕字型大小 <span style="font-weight:400;color:var(--muted)">(僅限硬字幕燒錄)</span></label>
+                <select id="autoCaptionFontSize">
+                  <option value="small">小 (Small)</option>
+                  <option value="medium" selected>中 (Medium)</option>
+                  <option value="large">大 (Large)</option>
+                </select>
+              </div>
+            </div>
+            <p class="hint" id="autoCaptionInfo">推薦多數影片使用 Base 模型。首次使用會自動下載並快取模型檔案。</p>
+            <div id="autoCaptionTranscriptPanel" class="hidden" style="margin-top:12px;border:1px solid var(--border);border-radius:7px;padding:10px;max-height:300px;overflow-y:auto;background:var(--surface)">
+              <div style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase">逐字稿預覽與編輯 (可手動修正)</div>
+              <textarea id="autoCaptionTranscript" style="width:100%;min-height:120px;max-height:200px;font-size:0.78rem" placeholder="識別後的逐字稿將顯示於此，您可以在嵌入前手動進行校對與修改。"></textarea>
+              <div style="display:flex;gap:6px;margin-top:8px;justify-content:flex-end">
+                <button class="btn btn-ghost btn-sm" onclick="clearAutoCaptionTranscript()"><i class="fas fa-redo"></i> 重置</button>
+                <button class="btn btn-success btn-sm" id="confirmEmbedBtn" disabled onclick="confirmAutoCaptionTranscript()"><i class="fas fa-check"></i> 確認並嵌入字幕</button>
+              </div>
+            </div>
+            <p class="hint" style="margin-top:8px"><strong style="color:var(--text)">100% 本地端安全處理：</strong>音訊擷取與 AI 轉寫均透過 Transformers.js 於瀏覽器內執行，絕無任何數據傳送至外部伺服器。</p>
+          </div>
+
+          <!-- Volume -->
+          <div class="op-panel hidden" id="panel-volume">
+            <h4>音量調整</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="lbl">音量倍率 - <span id="volVal">1.00</span>×</label>
+                <input type="range" id="volRange" min="0" max="4" step="0.05" value="1"
+                       oninput="document.getElementById('volVal').textContent=parseFloat(this.value).toFixed(2);updateSizeEstimate()">
+              </div>
+            </div>
+            <p class="hint">1.0 = 原始音量 &nbsp;·&nbsp; &gt;1 = 放大音量 &nbsp;·&nbsp; &lt;1 = 降低音量 &nbsp;·&nbsp; 0 = 靜音。</p>
+          </div>
+
+          <!-- Loop -->
+          <div class="op-panel hidden" id="panel-loop">
+            <h4>重複循環 (Loop)</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="lbl">總播放次數</label>
+                <input type="number" id="loopCount" value="3" min="2" max="50" oninput="updateSizeEstimate()">
+              </div>
+            </div>
+            <p class="hint">將影片複製並連續播放 N 次，無須重新編碼。此操作會忽略時間剪輯設定。</p>
+          </div>
+
+          <!-- Logo Overlay -->
+          <div class="op-panel hidden" id="panel-overlay">
+            <h4>水印標籤 / 圖片疊加</h4>
+            <div style="margin-bottom:10px">
+              <label class="lbl">圖片檔案 <span style="font-weight:400;color:var(--muted)">(推薦使用透明背景 PNG)</span></label>
+              <div style="display:flex;align-items:center;gap:8px">
+                <button class="btn btn-ghost btn-sm" onclick="document.getElementById('overlayFileInput').click()"><i class="fas fa-folder-open"></i> 選擇圖片</button>
+                <span id="overlayFileName" style="font-size:0.78rem;color:var(--muted)">尚未選擇檔案</span>
+                <input type="file" id="overlayFileInput" style="display:none" accept="image/*,.png,.jpg,.jpeg,.gif,.webp" onchange="onOverlayFileChange(this)">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="lbl">水印位置</label>
+                <select id="overlayPos">
+                  <option value="W-w-10:H-h-10">右下角</option>
+                  <option value="10:10">左上角</option>
+                  <option value="W-w-10:10">右上角</option>
+                  <option value="10:H-h-10">左下角</option>
+                  <option value="(W-w)/2:(H-h)/2">正中央</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="lbl">圖片寬度比例 (% 影片寬度)</label>
+                <input type="number" id="overlayScale" value="15" min="5" max="100" oninput="updateSizeEstimate()">
+              </div>
+            </div>
+          </div>
+
+          <!-- Mix Audio -->
+          <div class="op-panel hidden" id="panel-mixaudio">
+            <h4>混音 / 新增背景音樂</h4>
+            <div style="margin-bottom:10px">
+              <label class="lbl">背景音樂 / 音訊檔案</label>
+              <div style="display:flex;align-items:center;gap:8px">
+                <button class="btn btn-ghost btn-sm" onclick="document.getElementById('mixAudioFileInput').click()"><i class="fas fa-folder-open"></i> 選擇音樂檔</button>
+                <span id="mixAudioFileName" style="font-size:0.78rem;color:var(--muted)">尚未選擇檔案</span>
+                <input type="file" id="mixAudioFileInput" style="display:none" accept="audio/*,.mp3,.wav,.ogg,.aac,.flac,.m4a" onchange="onMixAudioFileChange(this)">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="lbl">原影片音量 - <span id="mixOrigVolVal">1.00</span></label>
+                <input type="range" id="mixOrigVol" min="0" max="2" step="0.05" value="1"
+                       oninput="document.getElementById('mixOrigVolVal').textContent=parseFloat(this.value).toFixed(2)">
+              </div>
+              <div class="form-group">
+                <label class="lbl">背景音樂音量 - <span id="mixMusicVolVal">0.30</span></label>
+                <input type="range" id="mixMusicVol" min="0" max="2" step="0.05" value="0.3"
+                       oninput="document.getElementById('mixMusicVolVal').textContent=parseFloat(this.value).toFixed(2)">
+              </div>
+            </div>
+            <p class="hint">音樂若短於影片長度將自動循環。影片畫面保持無損複製。</p>
+          </div>
+
+          <!-- Concatenate -->
+          <div class="op-panel hidden" id="panel-concat">
+            <h4>影片前後合併 (Concatenate)</h4>
+            <div style="margin-bottom:10px">
+              <label class="lbl">第二段影片 <span style="font-weight:400;color:var(--muted)">(將拼接於主影片之後)</span></label>
+              <div style="display:flex;align-items:center;gap:8px">
+                <button class="btn btn-ghost btn-sm" onclick="document.getElementById('concatFileInput').click()"><i class="fas fa-folder-open"></i> 選擇影片</button>
+                <span id="concatFileName" style="font-size:0.78rem;color:var(--muted)">尚未選擇檔案</span>
+                <input type="file" id="concatFileInput" style="display:none" accept="video/*" onchange="onConcatFileChange(this)">
+              </div>
+            </div>
+            <p class="hint">系統將自動統一不同解析度與編碼並進行流暢合併。</p>
+          </div>
+
+          <!-- Side by Side -->
+          <div class="op-panel hidden" id="panel-sxs">
+            <h4>並排分割畫面</h4>
+            <div style="margin-bottom:10px">
+              <label class="lbl">第二段影片</label>
+              <div style="display:flex;align-items:center;gap:8px">
+                <button class="btn btn-ghost btn-sm" onclick="document.getElementById('sxsFileInput').click()"><i class="fas fa-folder-open"></i> 選擇影片</button>
+                <span id="sxsFileName" style="font-size:0.78rem;color:var(--muted)">尚未選擇檔案</span>
+                <input type="file" id="sxsFileInput" style="display:none" accept="video/*" onchange="onSxsFileChange(this)">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="lbl">排版方式</label>
+                <select id="sxsLayout">
+                  <option value="h">左右水平並排</option>
+                  <option value="v">上下垂直對齊</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="lbl">基準對齊尺寸 (px)</label>
+                <input type="number" id="sxsDim" value="480" min="120" oninput="updateSizeEstimate()">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="lbl">音訊來源</label>
+                <select id="sxsAudio">
+                  <option value="0">來自第一段影片</option>
+                  <option value="1">來自第二段影片</option>
+                  <option value="none">靜音無聲音</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Picture in Picture -->
+          <div class="op-panel hidden" id="panel-pip">
+            <h4>畫中畫 (Picture in Picture)</h4>
+            <div style="margin-bottom:10px">
+              <label class="lbl">子畫面影片</label>
+              <div style="display:flex;align-items:center;gap:8px">
+                <button class="btn btn-ghost btn-sm" onclick="document.getElementById('pipFileInput').click()"><i class="fas fa-folder-open"></i> 選擇影片</button>
+                <span id="pipFileName" style="font-size:0.78rem;color:var(--muted)">尚未選擇檔案</span>
+                <input type="file" id="pipFileInput" style="display:none" accept="video/*" onchange="onPipFileChange(this)">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="lbl">子畫面位置</label>
+                <select id="pipPos">
+                  <option value="W-w-10:H-h-10">右下角</option>
+                  <option value="10:10">左上角</option>
+                  <option value="W-w-10:10">右上角</option>
+                  <option value="10:H-h-10">左下角</option>
+                  <option value="(W-w)/2:(H-h)/2">正中央</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="lbl">子畫面大小 (% 主影片寬度)</label>
+                <input type="number" id="pipScale" value="30" min="10" max="90" oninput="updateSizeEstimate()">
+              </div>
+            </div>
+          </div>
+
+          <!-- Media Info -->
+          <div class="op-panel hidden" id="panel-info">
+            <h4>媒體詳細資訊</h4>
+            <div id="infoBasic" style="font-size:0.82rem;color:var(--text);line-height:1.9;margin-bottom:10px">
+              <span style="color:var(--muted)">請載入影片以檢視屬性。</span>
+            </div>
+            <p class="hint">點擊 <strong style="color:var(--text)">開始處理影片</strong> 可執行深度掃描並列出詳細串流資訊。</p>
+          </div>
+
+          <!-- Raw / Advanced -->
+          <div class="op-panel hidden" id="panel-raw">
+            <h4>自訂 FFmpeg 命令 (Raw CLI)</h4>
+
+            <!-- Example library -->
+            <details class="raw-examples-details" id="rawExamplesPanel">
+              <summary><span class="rex-arrow">&#9658;</span>&nbsp;常用指令範例庫</summary>
+              <div class="rex-list" id="rawExamplesList"><!-- populated by JS --></div>
+            </details>
+
+            <div id="rawInput2Row" style="margin-bottom:8px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <button class="btn btn-ghost btn-sm" onclick="document.getElementById('rawInput2').click()"><i class="fas fa-folder-open"></i> 選擇第二個檔案</button>
+                <span id="rawInput2Name" style="font-size:0.78rem;color:var(--muted)">尚未選擇檔案</span>
+                <input type="file" id="rawInput2" style="display:none" accept="audio/*,.mp3,.wav,.ogg,.aac,.flac,.m4a,.opus" onchange="onRawInput2Change(this)">
+              </div>
+            </div>
+            <div style="margin-bottom:8px">
+              <label class="lbl">自訂參數 (插在 <code style="color:var(--accent);font-size:.8em">-i input</code> 之後，輸出檔名之前)</label>
+              <textarea id="rawArgs" placeholder="-vf scale=1280:-2 -c:v libx264 -crf 23 -preset fast -c:a aac" oninput="updateRawPreview()"></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="lbl">輸出副檔名</label>
+                <input type="text" id="rawExt" value="mp4" placeholder="mp4" style="font-family:monospace" oninput="updateRawPreview()">
+              </div>
+              <div class="form-group" style="display:flex;align-items:center;gap:8px;padding-top:18px">
+                <input type="checkbox" id="rawBypassTrim" style="width:auto;accent-color:var(--accent)" onchange="updateRawPreview()">
+                <label class="lbl" for="rawBypassTrim" style="margin:0;cursor:pointer">略過剪輯設定</label>
+              </div>
+            </div>
+            <label class="lbl" style="margin-top:10px;display:block">完整命令預覽</label>
+            <div class="cmd-preview" id="cmdPreview">--</div>
+          </div>
+
+          <!-- Pad / Letterbox -->
+          <div class="op-panel hidden" id="panel-pad">
+            <h4>填補黑邊 (畫面比例調整)</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="lbl">目標比例</label>
+                <select id="padAR">
+                  <option value="16:9">16:9 - 橫式 (YouTube, 電視)</option>
+                  <option value="9:16">9:16 - 直式 (Reels, TikTok, Short)</option>
+                  <option value="1:1">1:1 - 正方形 (Instagram)</option>
+                  <option value="4:3">4:3 - 傳統比例</option>
+                  <option value="4:5">4:5 - IG 動態</option>
+                  <option value="21:9">21:9 - 電影寬螢幕</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="lbl">填補顏色</label>
+                <select id="padColor">
+                  <option value="black">黑色</option>
+                  <option value="white">白色</option>
+                  <option value="0x808080">灰色</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Normalize Audio -->
+          <div class="op-panel hidden" id="panel-normalize">
+            <h4>音量標準化 (EBU R128)</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="lbl">目標響度 (Loudness)</label>
+                <select id="normalizeTarget">
+                  <option value="-14">-14 LUFS - YouTube / Spotify</option>
+                  <option value="-16" selected>-16 LUFS — Podcasts / Apple Music</option>
+                  <option value="-23">-23 LUFS — 電視廣播標準 (EBU R128)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Denoise -->
+          <div class="op-panel hidden" id="panel-denoise">
+            <h4>畫面降噪 (hqdn3d)</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="lbl">降噪強度</label>
+                <select id="denoiseStrength">
+                  <option value="light">輕微</option>
+                  <option value="medium" selected>中等</option>
+                  <option value="heavy">強效</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Boomerang -->
+          <div class="op-panel hidden" id="panel-boomerang">
+            <h4>迴旋鏢效果 (Boomerang)</h4>
+            <p class="hint" style="font-size:.82rem;color:var(--text)">先正向播放接著立即倒放，形成經典連續迴旋效果。會自動移除音訊。</p>
+          </div>
+
+          <!-- Sharpen / Blur -->
+          <div class="op-panel hidden" id="panel-sharpenblur">
+            <h4>畫面銳化 / 模糊</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="lbl">效果類型</label>
+                <select id="sbMode">
+                  <option value="sharpen">畫面銳化 (Sharpen)</option>
+                  <option value="blur">畫面模糊 (Blur)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="lbl">強度</label>
+                <select id="sbStrength">
+                  <option value="light">輕微</option>
+                  <option value="medium" selected>中等</option>
+                  <option value="heavy">強效</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Operation stack (chaining) -->
+          <div id="stackSection" class="hidden">
+            <div class="op-panel">
+              <h4>組合功能清單 (Operation Stack)</h4>
+              <div id="stackList"><div class="stack-empty">尚未新增任何操作 — 請在上方設定功能後點擊「新增至組合」</div></div>
+              <div class="form-row" style="margin-top:10px">
+                <div class="form-group">
+                  <label class="lbl">最終輸出格式</label>
+                  <select id="stackOutFmt" onchange="updateStackPreview()">
+                    <option value="mp4">MP4 (H.264 + AAC)</option>
+                    <option value="mkv">MKV (H.264 + AAC)</option>
+                    <option value="mov">MOV (H.264 + AAC)</option>
+                    <option value="webm">WebM (VP9 + Opus)</option>
+                    <option value="gif">GIF (動態圖)</option>
+                    <option value="avi">AVI</option>
+                  </select>
+                </div>
+              </div>
+              <label class="lbl" style="margin-top:10px;display:block">組合指令預覽</label>
+              <div class="cmd-preview" id="stackPreview">(組合佇列為空)</div>
+            </div>
+          </div>
+
+          <!-- Global output format (single mode) -->
+          <div id="singleOutFmtWrap" class="form-row" style="margin-top:12px">
+            <div class="form-group">
+              <label class="lbl">輸出格式</label>
+              <select id="singleOutFmt" onchange="updateSizeEstimate()">
+                <option value="mp4">MP4 (H.264 + AAC)</option>
+                <option value="mkv">MKV (H.264 + AAC)</option>
+                <option value="mov">MOV (H.264 + AAC)</option>
+                <option value="webm">WebM (VP9 + Opus)</option>
+                <option value="gif">GIF (動態圖)</option>
+                <option value="avi">AVI</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Size estimate -->
+          <div id="sizeEstWrap" class="size-estimate hidden">
+            <span>預估輸出檔案大小</span>
+            <span><strong id="sizeEstVal">—</strong>&ensp;<span id="sizeDelta" class="size-delta"></span></span>
+          </div>
+
+          <!-- Progress -->
+          <div class="progress-wrap hidden" id="progWrap">
+            <div class="progress-header"><span id="progLabel">處理中...</span><span id="progPct">0%</span></div>
+            <div class="progress-track"><div class="progress-fill" id="progFill"></div></div>
+          </div>
+
+          <button class="btn btn-primary btn-block" id="processBtn" disabled="true" onclick="processVideo()" style="margin-top:6px">
+            <i class="fas fa-gear"></i> 開始處理影片
+          </button>
+          <button class="btn btn-ghost btn-block hidden" id="addStackBtn" disabled="true" onclick="addToStack()" style="margin-top:6px">
+            <i class="fas fa-plus"></i> 新增至組合
+          </button>
+          <div class="stack-note hidden" id="addStackNote"></div>
+          <button class="btn btn-primary btn-block hidden" id="processStackBtn" disabled="true" onclick="runProcessStack()" style="margin-top:8px">
+            <i class="fas fa-layer-group"></i> 執行組合任務
+          </button>
+
+          <!-- Quick download in options panel -->
+          <div id="quickDownloadWrap" class="hidden" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+            <p style="font-size:0.78rem;color:var(--muted);margin-bottom:8px">處理完成：</p>
+            <button class="btn btn-success btn-block" id="quickDlBtn" onclick="download()"><i class="fas fa-download"></i> 下載處理結果</button>
+            <span class="out-size" id="quickOutMeta" style="display:block;font-size:0.72rem;color:var(--muted);text-align:center;margin-top:6px"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Output -->
+      <div class="card">
+        <div class="card-header">處理結果 / 輸出區</div>
+        <div class="card-body">
+          <div class="out-empty" id="outEmpty">處理完成後結果將顯示於此處</div>
+          <div id="outContent" class="hidden">
+            <video id="outVideo" controls></video>
+            <div id="outAudioWrap" class="hidden">
+              <audio id="outAudio" controls style="width:100%;margin-top:8px;border-radius:7px"></audio>
+            </div>
+            <img id="outImg" class="hidden" style="max-width:100%;border-radius:7px;margin-top:8px;display:block">
+            <div class="out-actions">
+              <button class="btn btn-success" id="dlBtn" onclick="download()"><i class="fas fa-download"></i> 下載檔案</button>
+              <span class="out-size" id="outMeta"></span>
+            </div>
+            <!-- Batch outputs - shown inline in output section -->
+            <div id="batchOutputsWrap" class="hidden" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+              <div style="font-size:0.85rem;font-weight:600;color:var(--muted);margin-bottom:12px;">批次完成檔案 (<span id="batchCompleteCount">0</span>)</div>
+              <div style="display:flex;gap:8px;margin-bottom:12px;">
+                <select id="batchOutputSelect" onchange="selectBatchOutput(this.value)" style="flex:1;padding:8px;border-radius:4px;background:var(--surface3);color:var(--text);border:1px solid var(--border);">
+                  <option value="">-- 選擇檔案以預覽 --</option>
+                </select>
+                <button class="btn btn-success btn-sm" id="downloadAllZipBtn" onclick="downloadBatchAllAsZip()" title="打包下載為 ZIP"><i class="fas fa-archive"></i> 打包 ZIP 下載</button>
+              </div>
+              <div id="batchSelectedFileInfo" style="font-size:0.85rem;line-height:1.6;color:var(--muted);"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Log -->
+  <div class="card" style="margin-top:16px; margin-bottom: 50px;">
+    <div class="card-header">
+      FFmpeg 執行日誌 (Log)
+      <button class="btn btn-ghost btn-sm" onclick="clearLog()"><i class="fas fa-broom"></i> 清除日誌</button>
+    </div>
+    <div class="log-shell">
+      <div class="log-current" id="logCurrent">
+        <span class="log-current-label">當前指令：</span>
+        <span class="log-current-value" id="logCurrentValue">等待 FFmpeg 指令中...</span>
+      </div>
+      <div class="log" id="log"><div class="log-line ok">系統就緒。請點擊「載入 FFmpeg」開始。</div></div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+</body>
 </html>
