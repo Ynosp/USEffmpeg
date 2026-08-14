@@ -1,70 +1,3 @@
-====================================================================
-USEffmpeg - 繁體中文 UI 界面語系檔與程式碼修訂檔
-帳號名稱: Ynosp
-專案名稱: USEffmpeg
-原始專案: tejaswigowda/ffmpeg-webCLI
-====================================================================
-
-一、 UI 界面繁體中文對照清單 (Traditional Chinese Translation Dictionary)
---------------------------------------------------------------------
-[頁頭與基本資訊]
-- App Title: USEffmpeg - 瀏覽器端線上影片轉檔與處理系統
-- Tagline: 100% 本地端處理 · 數據絕不安上傳至伺服器
-- Fork Tag: Fork 自 tejaswigowda/ffmpeg-webCLI
-- Status Unloaded: FFmpeg 未載入 - 請點擊「載入 FFmpeg」開始使用
-- Status Loading: 正在載入核心組件 (~31 MB)...
-- Status Ready: FFmpeg 已就緒，可開始處理影片！
-- Button Load FFmpeg: 載入 FFmpeg (~31 MB)
-
-[檔案上傳與輸入區]
-- Select Input Header: 選擇或拖放影片檔案
-- Drag Drop Area: 點擊選擇檔案，或將影片拖放至此處
-- Supported Formats: 支援格式：MP4, WebM, MOV, AVI, MKV, GIF, MP3, WAV 等
-- Batch Mode: 批次處理模式
-- Select Batch Files: 選擇多個檔案進行批次轉檔
-
-[主要操作選單]
-- Operation Type: 處理功能選擇
-- Op Convert: 格式轉換 (Convert Format)
-- Op Trim: 影片剪輯 (Trim Video)
-- Op Compress: 影片壓縮 (Compress Video)
-- Op Resize: 解析度調整 (Resize / Scale)
-- Op Speed: 播放速度調整 (Speed / Atempo)
-- Op Rotate: 旋轉與鏡像 (Rotate / Flip)
-- Op Crop: 影片裁切 (Crop)
-- Op Volume: 音量調整 (Volume Boost/Reduce)
-- Op Extract Audio: 提取音訊 (Extract Audio)
-- Op Mute: 移除音訊 (Mute / Remove Audio)
-- Op Subtitle: 字幕內嵌/燒錄 (Subtitles)
-- Op GIF: 製作 GIF 動態圖 (GIF Maker)
-- Op Watermark: 水印標籤 (Watermark)
-- Op Reverse: 倒放影片 (Reverse Video)
-- Op Custom CLI: 自訂 FFmpeg 命令 (Raw CLI)
-
-[轉檔設定參數]
-- Output Format: 輸出格式
-- Video Codec: 影片編碼器
-- Audio Codec: 音訊編碼器
-- Preset / Speed: 編碼速度 / 效率
-- Quality (CRF): 畫質強度 (CRF 值越低畫質越高)
-- Resolution Preset: 預設解析度
-- Custom Width x Height: 自訂寬度 x 高度
-- Bitrate: 碼率 (Bitrate)
-- Frame Rate (FPS): 幀率 (FPS)
-- Keep Aspect Ratio: 保持縱橫比
-
-[執行與輸出]
-- Process Button: 開始處理影片
-- Processing Status: 處理中... 請勿關閉分頁
-- Progress Bar: 處理進度
-- Estimated Size: 預估檔案大小
-- Download Result: 下載處理結果檔案
-- Download All ZIP: 批次打包下載 (.ZIP)
-- Preview Output: 處理結果預覽
-
-====================================================================
-二、 網頁 index.html 繁體中文修改範例 (Main HTML Markup Snippet)
-====================================================================
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -75,113 +8,135 @@ USEffmpeg - 繁體中文 UI 界面語系檔與程式碼修訂檔
   <style>
     :root {
       --primary-color: #2563eb;
+      --primary-hover: #1d4ed8;
       --bg-color: #f8fafc;
       --card-bg: #ffffff;
       --text-color: #1e293b;
+      --text-muted: #64748b;
       --border-color: #e2e8f0;
     }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Microsoft JhengHei", sans-serif;
       background-color: var(--bg-color);
       color: var(--text-color);
-      margin: 0;
-      padding: 20px;
+      padding: 40px 20px;
+      display: flex;
+      justify-content: center;
     }
+
     .container {
-      max-width: 900px;
-      margin: 0 auto;
+      width: 100%;
+      max-width: 850px;
       background: var(--card-bg);
-      padding: 24px;
-      border-radius: 12px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      padding: 32px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
     }
-    h1 { color: var(--primary-color); margin-bottom: 8px; }
-    .subtitle { color: #64748b; font-size: 0.95rem; margin-bottom: 20px; }
+
+    header {
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      color: var(--primary-color);
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
     .status-bar {
-      padding: 12px 16px;
+      padding: 14px 20px;
       background: #eff6ff;
       border: 1px solid #bfdbfe;
-      border-radius: 8px;
+      border-radius: 10px;
       color: #1e40af;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      font-size: 0.95rem;
     }
+
     .btn-primary {
       background: var(--primary-color);
       color: white;
       border: none;
-      padding: 10px 20px;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .btn-primary:hover { background: #1d4ed8; }
-    .upload-box {
-      border: 2px dashed var(--border-color);
-      padding: 40px;
-      text-align: center;
+      padding: 10px 18px;
       border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
       cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .upload-box {
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 48px 20px;
+      text-align: center;
       background: #fafafa;
+      cursor: pointer;
+      transition: border-color 0.2s, background-color 0.2s;
+    }
+
+    .upload-box:hover {
+      border-color: var(--primary-color);
+      background-color: #f0fdf4;
+    }
+
+    .upload-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #334155;
+    }
+
+    .upload-desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
     }
   </style>
 </head>
 <body>
+
   <div class="container">
+    <!-- 標頭資訊 -->
     <header>
       <h1>USEffmpeg 線上影片轉檔系統</h1>
       <p class="subtitle">100% 瀏覽器端 WebAssembly 處理 · 數據完全隱私不寫入伺服器</p>
     </header>
 
+    <!-- FFmpeg 載入狀態條 -->
     <div class="status-bar" id="status-bar">
       <span id="status-text">FFmpeg 未載入 - 請點擊右側按鈕開始</span>
       <button class="btn-primary" id="load-btn">載入 FFmpeg 核心 (~31 MB)</button>
     </div>
 
+    <!-- 檔案拖放上傳區 -->
     <main>
-      <div class="upload-box" id="drop-zone">
-        <h3>點擊選擇或將影片檔案拖放至此處</h3>
-        <p>支援格式：MP4, WebM, MOV, AVI, MKV, GIF, MP3, WAV 等</p>
+      <div class="upload-box" id="drop-zone" onclick="document.getElementById('file-input').click()">
+        <div class="upload-title">點擊選擇或將影片檔案拖放至此處</div>
+        <div class="upload-desc">支援格式：MP4, WebM, MOV, AVI, MKV, GIF, MP3, WAV 等</div>
         <input type="file" id="file-input" style="display:none;" accept="video/*,audio/*">
       </div>
     </main>
   </div>
+
 </body>
 </html>
-
-====================================================================
-三、 GitHub 專案設置與離線桌面點擊使用教學
-====================================================================
-【步驟 1：建立專案與推送到 GitHub (Ynosp/USEffmpeg)】
-1. 登入 GitHub，點擊右上角「+」-> 「New repository」。
-2. Repository name 設定為：USEffmpeg
-3. 設定為 Public (公開)，點擊 Create repository。
-4. 在本地電腦將本語系檔案更新至專案 code 中：
-   git clone https://github.com/tejaswigowda/ffmpeg-webCLI.git
-   cd ffmpeg-webCLI
-   (依據本 TXT 檔案內容修改 index.html 與相關 JS 語意)
-   git remote set-url origin https://github.com/Ynosp/USEffmpeg.git
-   git branch -M main
-   git push -u origin main
-
-【步驟 2：開啟 GitHub Pages 免費線上使用】
-1. 進入您在 GitHub 的專案頁面：https://github.com/Ynosp/USEffmpeg
-2. 進入「Settings」 -> 左側選單「Pages」。
-3. 在「Build and deployment」下的 Source 選擇「Deploy from a branch」。
-4. Branch 選擇「main」 / /(root)，點擊「Save」。
-5. 等待數分鐘後，您的線上轉檔網站即上線於：
-   https://Ynosp.github.io/USEffmpeg/
-
-【步驟 3：下載至桌面直接點擊使用 (離線 desktop 使用)】
-方法 A (最推薦 - PWA 應用程式化安裝)：
-1. 用 Chrome 或 Edge 瀏覽器打開 https://Ynosp.github.io/USEffmpeg/
-2. 首次打開時點擊「載入 FFmpeg」，讓瀏覽器快取 WebAssembly 核心檔案。
-3. 點擊瀏覽器網址列右側的「安裝應用程式」圖示（或選單中的「安裝 USEffmpeg」）。
-4. 安裝後桌面會出現獨立圖示，之後即使「完全斷網」也能直接在桌面點擊開啟使用！
-
-方法 B (本地直接打開 index.html)：
-1. 在 GitHub 專案頁面點擊「Code」->「Download ZIP」。
-2. 解壓縮 ZIP 檔至桌面。
-3. 直接雙擊打開 `index.html` 即可在瀏覽器中開啟系統使用。
