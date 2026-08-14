@@ -1,466 +1,187 @@
+====================================================================
+USEffmpeg - 繁體中文 UI 界面語系檔與程式碼修訂檔
+帳號名稱: Ynosp
+專案名稱: USEffmpeg
+原始專案: tejaswigowda/ffmpeg-webCLI
+====================================================================
+
+一、 UI 界面繁體中文對照清單 (Traditional Chinese Translation Dictionary)
+--------------------------------------------------------------------
+[頁頭與基本資訊]
+- App Title: USEffmpeg - 瀏覽器端線上影片轉檔與處理系統
+- Tagline: 100% 本地端處理 · 數據絕不安上傳至伺服器
+- Fork Tag: Fork 自 tejaswigowda/ffmpeg-webCLI
+- Status Unloaded: FFmpeg 未載入 - 請點擊「載入 FFmpeg」開始使用
+- Status Loading: 正在載入核心組件 (~31 MB)...
+- Status Ready: FFmpeg 已就緒，可開始處理影片！
+- Button Load FFmpeg: 載入 FFmpeg (~31 MB)
+
+[檔案上傳與輸入區]
+- Select Input Header: 選擇或拖放影片檔案
+- Drag Drop Area: 點擊選擇檔案，或將影片拖放至此處
+- Supported Formats: 支援格式：MP4, WebM, MOV, AVI, MKV, GIF, MP3, WAV 等
+- Batch Mode: 批次處理模式
+- Select Batch Files: 選擇多個檔案進行批次轉檔
+
+[主要操作選單]
+- Operation Type: 處理功能選擇
+- Op Convert: 格式轉換 (Convert Format)
+- Op Trim: 影片剪輯 (Trim Video)
+- Op Compress: 影片壓縮 (Compress Video)
+- Op Resize: 解析度調整 (Resize / Scale)
+- Op Speed: 播放速度調整 (Speed / Atempo)
+- Op Rotate: 旋轉與鏡像 (Rotate / Flip)
+- Op Crop: 影片裁切 (Crop)
+- Op Volume: 音量調整 (Volume Boost/Reduce)
+- Op Extract Audio: 提取音訊 (Extract Audio)
+- Op Mute: 移除音訊 (Mute / Remove Audio)
+- Op Subtitle: 字幕內嵌/燒錄 (Subtitles)
+- Op GIF: 製作 GIF 動態圖 (GIF Maker)
+- Op Watermark: 水印標籤 (Watermark)
+- Op Reverse: 倒放影片 (Reverse Video)
+- Op Custom CLI: 自訂 FFmpeg 命令 (Raw CLI)
+
+[轉檔設定參數]
+- Output Format: 輸出格式
+- Video Codec: 影片編碼器
+- Audio Codec: 音訊編碼器
+- Preset / Speed: 編碼速度 / 效率
+- Quality (CRF): 畫質強度 (CRF 值越低畫質越高)
+- Resolution Preset: 預設解析度
+- Custom Width x Height: 自訂寬度 x 高度
+- Bitrate: 碼率 (Bitrate)
+- Frame Rate (FPS): 幀率 (FPS)
+- Keep Aspect Ratio: 保持縱橫比
+
+[執行與輸出]
+- Process Button: 開始處理影片
+- Processing Status: 處理中... 請勿關閉分頁
+- Progress Bar: 處理進度
+- Estimated Size: 預估檔案大小
+- Download Result: 下載處理結果檔案
+- Download All ZIP: 批次打包下載 (.ZIP)
+- Preview Output: 處理結果預覽
+
+====================================================================
+二、 網頁 index.html 繁體中文修改範例 (Main HTML Markup Snippet)
+====================================================================
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <script src="coi-serviceworker.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ffmpeg webCLI</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <title>USEffmpeg - 線上影片轉檔與處理系統</title>
+  <link rel="manifest" href="manifest.json">
   <style>
     :root {
-      --bg-main: #0b0e14;
-      --bg-card: #131722;
-      --border-color: #232936;
-      --border-focus: #3b82f6;
-      --text-main: #e2e8f0;
-      --text-muted: #64748b;
-      --accent-blue: #2563eb;
-      --accent-blue-hover: #1d4ed8;
-      --accent-green: #22c55e;
+      --primary-color: #2563eb;
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-color: #1e293b;
+      --border-color: #e2e8f0;
     }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
-      background-color: var(--bg-main);
-      color: var(--text-main);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      padding: 16px;
-      font-size: 14px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Microsoft JhengHei", sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 20px;
     }
-
-    .app-container { max-width: 1400px; margin: 0 auto; }
-
-    /* Top Navigation Header */
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
-    .logo-group { display: flex; align-items: center; gap: 8px; }
-    .logo-title { font-size: 1.1rem; font-weight: 700; color: #fff; }
-    .badge {
-      font-size: 0.7rem; padding: 2px 6px; border-radius: 4px;
-      background: #1e293b; color: #94a3b8; border: 1px solid #334155;
-    }
-    .badge-green { background: #064e3b; color: #34d399; border-color: #047857; }
-    .btn-github {
-      background: #1e293b; color: #cbd5e1; border: 1px solid #334155;
-      padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; cursor: pointer;
-      text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
-    }
-
-    /* Top Status Loading Bar */
+    h1 { color: var(--primary-color); margin-bottom: 8px; }
+    .subtitle { color: #64748b; font-size: 0.95rem; margin-bottom: 20px; }
     .status-bar {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      padding: 10px 16px;
+      padding: 12px 16px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      color: #1e40af;
+      margin-bottom: 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
     }
-    .status-info { font-size: 0.85rem; color: #ef4444; display: flex; align-items: center; gap: 8px; }
-    .status-info::before { content: "●"; font-size: 0.8rem; }
-    .btn-load {
-      background: var(--accent-blue); color: #fff; border: none;
-      padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 0.85rem;
-      cursor: pointer; display: flex; align-items: center; gap: 6px;
-    }
-    .btn-load:hover { background: var(--accent-blue-hover); }
-
-    /* Main Two-Column Layout */
-    .main-grid {
-      display: grid;
-      grid-template-columns: 360px 1fr;
-      gap: 16px;
-    }
-    @media (max-width: 900px) {
-      .main-grid { grid-template-columns: 1fr; }
-    }
-
-    /* Column Cards */
-    .panel-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 14px;
-      margin-bottom: 16px;
-    }
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-    .card-title { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; color: var(--text-muted); text-transform: uppercase; }
-
-    /* Left Column: File Dropzone */
-    .dropzone {
-      border: 2px dashed #2e374a;
+    .btn-primary {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 10px 20px;
       border-radius: 6px;
-      padding: 30px 16px;
-      text-align: center;
+      font-weight: 600;
       cursor: pointer;
-      transition: border-color 0.2s;
     }
-    .dropzone:hover { border-color: var(--accent-blue); }
-    .dropzone i { font-size: 2rem; color: var(--text-muted); margin-bottom: 8px; display: block; }
-    .dropzone-title { color: #3b82f6; font-size: 0.85rem; font-weight: 600; }
-    .dropzone-sub { color: var(--text-muted); font-size: 0.75rem; margin-top: 4px; }
-
-    /* Left Column: TRIM Section */
-    .trim-info { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 12px; }
-    .range-labels { display: flex; justify-content: space-between; font-size: 0.75rem; color: #94a3b8; margin-bottom: 6px; }
-    .slider-track-box {
-      position: relative; height: 8px; background: #1e293b; border-radius: 4px; margin-bottom: 12px;
-    }
-    .slider-track-active {
-      position: absolute; left: 0%; right: 0%; height: 100%; background: var(--accent-blue); border-radius: 4px;
-    }
-    .trim-time-bar { display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--text-muted); }
-
-    /* Right Column: Operations */
-    .mode-toggle { display: flex; gap: 8px; margin-bottom: 14px; }
-    .btn-mode {
-      background: #1e293b; color: #94a3b8; border: 1px solid var(--border-color);
-      padding: 4px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer;
-      display: flex; align-items: center; gap: 6px;
-    }
-    .btn-mode.active { background: var(--accent-blue); color: #fff; border-color: var(--accent-blue); }
-
-    /* 5-Column Grid Layout matching the left image */
-    .ops-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 8px;
-    }
-    @media (max-width: 1100px) { .ops-grid { grid-template-columns: repeat(4, 1fr); } }
-    @media (max-width: 700px) { .ops-grid { grid-template-columns: repeat(3, 1fr); } }
-
-    .op-tile {
-      background: #181d2a;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      padding: 12px 4px;
+    .btn-primary:hover { background: #1d4ed8; }
+    .upload-box {
+      border: 2px dashed var(--border-color);
+      padding: 40px;
       text-align: center;
-      cursor: pointer;
-      transition: all 0.15s;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 72px;
-    }
-    .op-tile:hover { border-color: var(--accent-blue); background: #1f2738; }
-    .op-tile.active { border: 2px solid var(--accent-blue); background: #1c263b; }
-    .op-tile i { font-size: 1.1rem; margin-bottom: 6px; color: #60a5fa; }
-    .op-tile span { font-size: 0.75rem; color: #cbd5e1; font-weight: 500; }
-
-    /* Option Settings Box */
-    .settings-box {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
       border-radius: 8px;
-      padding: 16px;
-      margin-top: 16px;
-    }
-    .form-group { margin-bottom: 12px; }
-    label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; }
-    select, input[type="text"], input[type="number"] {
-      width: 100%; padding: 8px 10px; background: #0b0e14; border: 1px solid var(--border-color);
-      border-radius: 6px; color: var(--text-main); font-size: 0.85rem; outline: none;
-    }
-    select:focus, input:focus { border-color: var(--accent-blue); }
-
-    .btn-exec {
-      width: 100%; background: var(--accent-green); color: #fff; border: none;
-      padding: 10px; border-radius: 6px; font-weight: 600; font-size: 0.9rem;
-      cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px;
-      margin-top: 10px;
-    }
-    .btn-exec:hover { background: #16a34a; }
-
-    /* Terminal Output */
-    .log-box {
-      background: #05080c; border: 1px solid var(--border-color); border-radius: 6px;
-      padding: 12px; font-family: monospace; font-size: 0.8rem; color: #4ade80;
-      height: 120px; overflow-y: auto; margin-top: 16px; white-space: pre-wrap;
+      cursor: pointer;
+      background: #fafafa;
     }
   </style>
 </head>
 <body>
-  <div class="app-container">
-    <!-- Header -->
+  <div class="container">
     <header>
-      <div class="logo-group">
-        <span class="logo-title">ffmpeg webCLI</span>
-        <span class="badge">離線優先</span>
-        <span class="badge badge-green">🔒 100% 本地端處理，檔案絕不上傳</span>
-      </div>
-      <a href="https://github.com/tejaswigowda/ffmpeg-webCLI" class="btn-github" target="_blank"><i class="fa-brands fa-github"></i> Fork on GitHub</a>
+      <h1>USEffmpeg 線上影片轉檔系統</h1>
+      <p class="subtitle">100% 瀏覽器端 WebAssembly 處理 · 數據完全隱私不寫入伺服器</p>
     </header>
 
-    <!-- Loading Bar -->
-    <div class="status-bar">
-      <div class="status-info" id="statusText">ffmpeg 未載入 - 請點擊「載入 ffmpeg」開始</div>
-      <button class="btn-load" id="loadBtn" onclick="loadFFmpeg()"><i class="fa-solid fa-play"></i> 載入 ffmpeg (~31 MB)</button>
+    <div class="status-bar" id="status-bar">
+      <span id="status-text">FFmpeg 未載入 - 請點擊右側按鈕開始</span>
+      <button class="btn-primary" id="load-btn">載入 FFmpeg 核心 (~31 MB)</button>
     </div>
 
-    <!-- Main Layout Grid -->
-    <div class="main-grid">
-      <!-- Left Column -->
-      <div class="left-col">
-        <!-- Input Video Card -->
-        <div class="panel-card">
-          <div class="card-header">
-            <span class="card-title">INPUT VIDEO (輸入影片)</span>
-            <span class="badge"><i class="fa-solid fa-layer-group"></i> 批次處理</span>
-          </div>
-          <div class="dropzone" id="dropZone" onclick="document.getElementById('fileInput').click()">
-            <i class="fa-solid fa-file-video"></i>
-            <div class="dropzone-title" id="uploadPrompt">點擊選擇檔案 或拖曳至此</div>
-            <div class="dropzone-sub">MP4, WebM, MOV, AVI, MKV, GIF...</div>
-            <input type="file" id="fileInput" style="display:none" accept="video/*,audio/*">
-          </div>
-        </div>
-
-        <!-- Trim Card -->
-        <div class="panel-card">
-          <div class="card-header">
-            <span class="card-title">TRIM (影片剪裁)</span>
-            <span class="badge" style="color: #60a5fa;">套用到所有操作</span>
-          </div>
-          <div class="trim-info">拖曳端點設定開始與結束時間。留空則保留完整影片。</div>
-          <div class="range-labels">
-            <span id="lblStart">0:00.0</span>
-            <span id="lblEnd">1:40.0</span>
-          </div>
-          <div class="slider-track-box">
-            <div class="slider-track-active"></div>
-          </div>
-          <div class="trim-time-bar">
-            <span>0:00</span>
-            <span id="lblSelection">已選擇: 1:40.0</span>
-            <span>--:--</span>
-          </div>
-        </div>
+    <main>
+      <div class="upload-box" id="drop-zone">
+        <h3>點擊選擇或將影片檔案拖放至此處</h3>
+        <p>支援格式：MP4, WebM, MOV, AVI, MKV, GIF, MP3, WAV 等</p>
+        <input type="file" id="file-input" style="display:none;" accept="video/*,audio/*">
       </div>
-
-      <!-- Right Column: Operations -->
-      <div class="right-col">
-        <div class="panel-card">
-          <div class="card-header">
-            <span class="card-title">OPERATIONS (功能選擇)</span>
-          </div>
-          
-          <div class="mode-toggle">
-            <button class="btn-mode active"><i class="fa-solid fa-square"></i> 單一處理 (Single)</button>
-            <button class="btn-mode"><i class="fa-solid fa-link"></i> 鏈式組合 (Stack)</button>
-          </div>
-
-          <!-- 精準還原左圖 29 個功能圖示 grid (5欄) -->
-          <div class="ops-grid">
-            <div class="op-tile active" onclick="selectOp('convert', this)"><i class="fa-solid fa-rotate"></i><span>格式轉換</span></div>
-            <div class="op-tile" onclick="selectOp('resize', this)"><i class="fa-solid fa-down-left-and-up-right-to-center"></i><span>縮放與壓縮</span></div>
-            <div class="op-tile" onclick="selectOp('extract_audio', this)"><i class="fa-solid fa-music"></i><span>提取音訊</span></div>
-            <div class="op-tile" onclick="selectOp('mute', this)"><i class="fa-solid fa-volume-xmark"></i><span>靜音</span></div>
-            <div class="op-tile" onclick="selectOp('gif', this)"><i class="fa-solid fa-file-image"></i><span>轉為 GIF</span></div>
-
-            <div class="op-tile" onclick="selectOp('speed', this)"><i class="fa-solid fa-bolt"></i><span>播放變速</span></div>
-            <div class="op-tile" onclick="selectOp('rotate', this)"><i class="fa-solid fa-rotate-right"></i><span>旋轉 / 翻轉</span></div>
-            <div class="op-tile" onclick="selectOp('crop', this)"><i class="fa-solid fa-crop-simple"></i><span>畫面裁剪</span></div>
-            <div class="op-tile" onclick="selectOp('thumbnail', this)"><i class="fa-solid fa-image"></i><span>擷取縮圖</span></div>
-            <div class="op-tile" onclick="selectOp('reverse', this)"><i class="fa-solid fa-backward-fast"></i><span>影片倒放</span></div>
-
-            <div class="op-tile" onclick="selectOp('fade', this)"><i class="fa-solid fa-circle-half-stroke"></i><span>淡入 / 淡出</span></div>
-            <div class="op-tile" onclick="selectOp('adjust', this)"><i class="fa-solid fa-sliders"></i><span>色彩調整</span></div>
-            <div class="op-tile" onclick="selectOp('strip_meta', this)"><i class="fa-solid fa-ban"></i><span>清除元數據</span></div>
-            <div class="op-tile" onclick="selectOp('auto_caption', this)"><i class="fa-solid fa-closed-captioning"></i><span>自動字幕</span></div>
-            <div class="op-tile" onclick="selectOp('embed_sub', this)"><i class="fa-solid fa-closed-captioning"></i><span>嵌入字幕</span></div>
-
-            <div class="op-tile" onclick="selectOp('volume', this)"><i class="fa-solid fa-volume-high"></i><span>音量調整</span></div>
-            <div class="op-tile" onclick="selectOp('loop', this)"><i class="fa-solid fa-repeat"></i><span>循環播放</span></div>
-            <div class="op-tile" onclick="selectOp('logo', this)"><i class="fa-solid fa-stamp"></i><span>水印疊加</span></div>
-            <div class="op-tile" onclick="selectOp('mix_audio', this)"><i class="fa-solid fa-headphones"></i><span>混音處理</span></div>
-            <div class="op-tile" onclick="selectOp('concat', this)"><i class="fa-solid fa-link"></i><span>影片拼接</span></div>
-
-            <div class="op-tile" onclick="selectOp('side_by_side', this)"><i class="fa-solid fa-columns"></i><span>並排畫面</span></div>
-            <div class="op-tile" onclick="selectOp('pip', this)"><i class="fa-solid fa-clone"></i><span>子母畫面</span></div>
-            <div class="op-tile" onclick="selectOp('media_info', this)"><i class="fa-solid fa-circle-info"></i><span>媒體資訊</span></div>
-            <div class="op-tile" onclick="selectOp('pad', this)"><i class="fa-solid fa-expand"></i><span>填充黑邊</span></div>
-            <div class="op-tile" onclick="selectOp('normalize', this)"><i class="fa-solid fa-wave-square"></i><span>音量標準化</span></div>
-
-            <div class="op-tile" onclick="selectOp('denoise', this)"><i class="fa-solid fa-wand-magic-sparkles"></i><span>畫面降噪</span></div>
-            <div class="op-tile" onclick="selectOp('boomerang', this)"><i class="fa-solid fa-arrows-spin"></i><span>動態迴圈</span></div>
-            <div class="op-tile" onclick="selectOp('blur', this)"><i class="fa-solid fa-eye-low-vision"></i><span>銳化 / 模糊</span></div>
-            <div class="op-tile" onclick="selectOp('raw', this)"><i class="fa-solid fa-terminal"></i><span>Raw FFmpeg</span></div>
-          </div>
-
-          <!-- Dynamic Operations Settings Panel -->
-          <div class="settings-box">
-            <div class="card-title" id="optTitle" style="margin-bottom: 10px;">CONVERT TO FORMAT (格式轉換設定)</div>
-            <div id="optDynamicContent">
-              <div class="form-group">
-                <label>目標格式：</label>
-                <select id="formatSelect">
-                  <option value="mp4">MP4</option>
-                  <option value="webm">WebM</option>
-                  <option value="mkv">MKV</option>
-                  <option value="mov">MOV</option>
-                  <option value="avi">AVI</option>
-                  <option value="gif">GIF</option>
-                </select>
-              </div>
-            </div>
-            <button class="btn-exec" id="execBtn" onclick="runCurrentOperation()"><i class="fa-solid fa-rocket"></i> 開始處理並下載</button>
-          </div>
-        </div>
-
-        <!-- Log Terminal -->
-        <div class="panel-card" style="padding: 10px;">
-          <div class="card-title">TERMINAL OUTPUT (執行日誌)</div>
-          <div class="log-box" id="logBox">> 系統準備就緒，等待載入 FFmpeg...</div>
-        </div>
-      </div>
-    </div>
+    </main>
   </div>
-
-  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
-  <script>
-    const { createFFmpeg, fetchFile } = FFmpeg;
-    let ffmpeg = null;
-    let currentFile = null;
-    let currentOp = 'convert';
-
-    function log(msg) {
-      const logBox = document.getElementById("logBox");
-      if (logBox) {
-        logBox.innerText += "\n> " + msg;
-        logBox.scrollTop = logBox.scrollHeight;
-      }
-    }
-
-    async function loadFFmpeg() {
-      const btn = document.getElementById("loadBtn");
-      const statusText = document.getElementById("statusText");
-      try {
-        btn.disabled = true;
-        btn.innerText = "⏳ 載入中...";
-        statusText.innerText = "正在下載 FFmpeg WebAssembly 模組 (~31 MB)...";
-        log("下載 FFmpeg WebAssembly 核心中...");
-
-        ffmpeg = createFFmpeg({ log: true });
-        ffmpeg.setLogger(({ message }) => log(`[FFmpeg] ${message}`));
-        await ffmpeg.load();
-
-        statusText.style.color = "#34d399";
-        statusText.innerText = "🟢 FFmpeg 核心已就緒，可開始處理檔案";
-        btn.innerText = "✅ 已成功載入";
-        btn.style.background = "#059669";
-        log("FFmpeg 核心載入完成！");
-      } catch (err) {
-        statusText.innerText = "❌ 載入失敗：" + err.message;
-        btn.disabled = false;
-        btn.innerText = "重試載入";
-      }
-    }
-
-    function selectOp(op, el) {
-      currentOp = op;
-      document.querySelectorAll('.op-tile').forEach(tile => tile.classList.remove('active'));
-      el.classList.add('active');
-
-      const title = document.getElementById('optTitle');
-      const content = document.getElementById('optDynamicContent');
-
-      if (op === 'convert') {
-        title.innerText = "CONVERT TO FORMAT (格式轉換設定)";
-        content.innerHTML = `<div class="form-group"><label>目標格式：</label><select id="formatSelect"><option value="mp4">MP4</option><option value="webm">WebM</option><option value="mkv">MKV</option><option value="mov">MOV</option></select></div>`;
-      } else if (op === 'resize') {
-        title.innerText = "RESIZE & COMPRESS (縮放與壓縮)";
-        content.innerHTML = `<div class="form-group"><label>解像度：</label><select id="resSelect"><option value="1280:720">720p (1280x720)</option><option value="1920:1080">1080p (1920x1080)</option><option value="854:480">480p</option></select></div>`;
-      } else if (op === 'extract_audio') {
-        title.innerText = "EXTRACT AUDIO (提取音訊)";
-        content.innerHTML = `<div class="form-group"><label>音訊格式：</label><select id="fmtAudio"><option value="mp3">MP3</option><option value="wav">WAV</option><option value="aac">AAC</option></select></div>`;
-      } else if (op === 'mute') {
-        title.innerText = "MUTE AUDIO (靜音處理)";
-        content.innerHTML = `<p style="color:var(--text-muted); font-size:0.8rem;">將會完全移除影片中的聲音音軌。</p>`;
-      } else if (op === 'raw') {
-        title.innerText = "RAW FFMPEG (自訂指令)";
-        content.innerHTML = `<div class="form-group"><label>FFmpeg 參數：</label><input type="text" id="rawCmd" value="-i input.mp4 -vcodec copy output.mp4"></div>`;
-      } else {
-        title.innerText = `${op.toUpperCase()} 設定`;
-        content.innerHTML = `<p style="color:var(--text-muted); font-size:0.8rem;">已選擇 ${op} 功能，請按下方按鈕執行。</p>`;
-      }
-    }
-
-    function handleSelectedFiles(files) {
-      if (!files || files.length === 0) return;
-      currentFile = files[0];
-      document.getElementById("uploadPrompt").innerText = `📄 ${currentFile.name}`;
-      log(`已載入檔案: ${currentFile.name} (${(currentFile.size / 1024 / 1024).toFixed(2)} MB)`);
-    }
-
-    async function runCurrentOperation() {
-      if (!ffmpeg || !ffmpeg.isLoaded()) { alert("請先點擊上方按鈕載入 FFmpeg！"); return; }
-      if (!currentFile) { alert("請先選擇或拖曳影片檔案！"); return; }
-
-      const execBtn = document.getElementById('execBtn');
-      execBtn.disabled = true;
-      execBtn.innerText = "⏳ 處理中...";
-
-      try {
-        const ext = currentFile.name.split('.').pop() || 'mp4';
-        const inputName = `input.${ext}`;
-        let outputName = "output.mp4";
-        let args = [];
-
-        ffmpeg.FS('writeFile', inputName, await fetchFile(currentFile));
-
-        if (currentOp === 'convert') {
-          const fmt = document.getElementById('formatSelect').value;
-          outputName = `output.${fmt}`;
-          args = ['-i', inputName, outputName];
-        } else if (currentOp === 'extract_audio') {
-          const fmt = document.getElementById('fmtAudio').value;
-          outputName = `output.${fmt}`;
-          args = ['-i', inputName, '-vn', outputName];
-        } else if (currentOp === 'mute') {
-          args = ['-i', inputName, '-an', '-vcodec', 'copy', outputName];
-        } else {
-          args = ['-i', inputName, '-vcodec', 'copy', outputName];
-        }
-
-        log(`執行: ffmpeg ${args.join(' ')}`);
-        await ffmpeg.run(...args);
-
-        const data = ffmpeg.FS('readFile', outputName);
-        const blob = new Blob([data.buffer]);
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = outputName;
-        a.click();
-        log(`處理成功，已開始下載 ${outputName}`);
-      } catch (err) {
-        log("錯誤: " + err.message);
-      } finally {
-        execBtn.disabled = false;
-        execBtn.innerText = "🚀 開始處理並下載";
-      }
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      document.getElementById('fileInput').addEventListener("change", (e) => handleSelectedFiles(e.target.files));
-      window.addEventListener("dragover", (e) => e.preventDefault());
-      window.addEventListener("drop", (e) => {
-        e.preventDefault();
-        if (e.dataTransfer?.files.length > 0) handleSelectedFiles(e.dataTransfer.files);
-      });
-    });
-  </script>
 </body>
 </html>
+
+====================================================================
+三、 GitHub 專案設置與離線桌面點擊使用教學
+====================================================================
+【步驟 1：建立專案與推送到 GitHub (Ynosp/USEffmpeg)】
+1. 登入 GitHub，點擊右上角「+」-> 「New repository」。
+2. Repository name 設定為：USEffmpeg
+3. 設定為 Public (公開)，點擊 Create repository。
+4. 在本地電腦將本語系檔案更新至專案 code 中：
+   git clone https://github.com/tejaswigowda/ffmpeg-webCLI.git
+   cd ffmpeg-webCLI
+   (依據本 TXT 檔案內容修改 index.html 與相關 JS 語意)
+   git remote set-url origin https://github.com/Ynosp/USEffmpeg.git
+   git branch -M main
+   git push -u origin main
+
+【步驟 2：開啟 GitHub Pages 免費線上使用】
+1. 進入您在 GitHub 的專案頁面：https://github.com/Ynosp/USEffmpeg
+2. 進入「Settings」 -> 左側選單「Pages」。
+3. 在「Build and deployment」下的 Source 選擇「Deploy from a branch」。
+4. Branch 選擇「main」 / /(root)，點擊「Save」。
+5. 等待數分鐘後，您的線上轉檔網站即上線於：
+   https://Ynosp.github.io/USEffmpeg/
+
+【步驟 3：下載至桌面直接點擊使用 (離線 desktop 使用)】
+方法 A (最推薦 - PWA 應用程式化安裝)：
+1. 用 Chrome 或 Edge 瀏覽器打開 https://Ynosp.github.io/USEffmpeg/
+2. 首次打開時點擊「載入 FFmpeg」，讓瀏覽器快取 WebAssembly 核心檔案。
+3. 點擊瀏覽器網址列右側的「安裝應用程式」圖示（或選單中的「安裝 USEffmpeg」）。
+4. 安裝後桌面會出現獨立圖示，之後即使「完全斷網」也能直接在桌面點擊開啟使用！
+
+方法 B (本地直接打開 index.html)：
+1. 在 GitHub 專案頁面點擊「Code」->「Download ZIP」。
+2. 解壓縮 ZIP 檔至桌面。
+3. 直接雙擊打開 `index.html` 即可在瀏覽器中開啟系統使用。
