@@ -1,7 +1,43 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <script src="https://cdn.jsdelivr.net/npm/coi-serviceworker/coi-serviceworker.min.js"></script>
+  <!-- 引入支持單線程 (Single-thread) 的 FFmpeg 核心 -->
+<script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+
+<script>
+  const { createFFmpeg, fetchFile } = FFmpeg;
+  let ffmpeg = null;
+
+  async function loadFFmpeg() {
+    const btn = document.querySelector("button[onclick*='loadFFmpeg']");
+    const statusText = document.getElementById("logCurrentText");
+
+    try {
+      if (btn) btn.innerText = "⏳ 載入核心中...";
+      if (statusText) statusText.innerText = "正在下載 FFmpeg 單線程模組...";
+
+      // 指定使用不需要 SharedArrayBuffer 的 corePath
+      ffmpeg = createFFmpeg({
+        log: true,
+        corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js'
+      });
+
+      await ffmpeg.load();
+
+      if (statusText) statusText.innerText = "已就緒 (FFmpeg Loaded)";
+      if (btn) {
+        btn.innerText = "✅ FFmpeg 已成功載入";
+        btn.style.backgroundColor = "#28a745";
+        btn.disabled = true;
+      }
+    } catch (err) {
+      console.error(err);
+      if (statusText) statusText.innerText = "載入失敗：" + err.message;
+      if (btn) btn.innerText = "❌ 載入失敗，點擊重試";
+      alert("FFmpeg 載入失敗：" + err.message);
+    }
+  }
+</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0d0f1a">
