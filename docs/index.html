@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
+  <script src="coi-serviceworker.js"></script>
+  <meta charset="UTF-8">
+  ...
   <!-- 引入支持單線程 (Single-thread) 的 FFmpeg 核心 -->
 <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
 
@@ -591,14 +594,9 @@
 
     try {
       if (btn) btn.innerText = "⏳ 載入核心中...";
-      if (statusText) statusText.innerText = "正在下載 FFmpeg 單線程模組 (~25 MB)...";
+      if (statusText) statusText.innerText = "正在下載 FFmpeg 模組 (~31 MB)...";
 
-      // 強制使用 core-st (Single Thread) 核心，徹底避開 SharedArrayBuffer
-      ffmpeg = createFFmpeg({
-        log: true,
-        corePath: 'https://unpkg.com/@ffmpeg/core-st@0.11.1/dist/ffmpeg-core.js'
-      });
-
+      ffmpeg = createFFmpeg({ log: true });
       await ffmpeg.load();
 
       if (statusText) statusText.innerText = "已就緒 (FFmpeg Loaded)";
