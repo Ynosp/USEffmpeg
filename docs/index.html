@@ -1,41 +1,35 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <!-- 自動解鎖 SharedArrayBuffer 權限 (必須為相對路徑引用的本機檔案) -->
+  <!-- 自動解鎖 SharedArrayBuffer 權限 (必須引用本機 coi-serviceworker.js) -->
   <script src="coi-serviceworker.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ffmpeg webCLI 線上影音轉檔</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
       --bg-color: #0f111a;
       --card-bg: #161926;
+      --card-hover: #1f2436;
       --border-color: #2a2e45;
       --text-main: #e2e8f0;
       --text-muted: #94a3b8;
       --accent-blue: #3b82f6;
       --accent-green: #10b981;
-      --accent-green-bg: #064e3b;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       background-color: var(--bg-color);
       color: var(--text-main);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
       padding: 24px;
       line-height: 1.5;
     }
 
-    .container {
-      max-width: 1000px;
-      margin: 0 auto;
-    }
+    .container { max-width: 1100px; margin: 0 auto; }
 
     /* Header */
     header {
@@ -45,31 +39,13 @@
       margin-bottom: 24px;
     }
 
-    .logo-area {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .logo-title {
-      font-size: 1.25rem;
-      font-weight: 700;
-    }
-
+    .logo-area { display: flex; align-items: center; gap: 12px; }
+    .logo-title { font-size: 1.25rem; font-weight: 700; }
     .badge {
-      font-size: 0.75rem;
-      padding: 2px 8px;
-      border-radius: 12px;
-      background-color: #1e293b;
-      color: #60a5fa;
-      border: 1px solid #334155;
+      font-size: 0.75rem; padding: 2px 8px; border-radius: 12px;
+      background-color: #1e293b; color: #60a5fa; border: 1px solid #334155;
     }
-
-    .badge-green {
-      background-color: #064e3b;
-      color: #34d399;
-      border-color: #065f46;
-    }
+    .badge-green { background-color: #064e3b; color: #34d399; border-color: #065f46; }
 
     /* Status Bar */
     .status-card {
@@ -83,11 +59,6 @@
       margin-bottom: 24px;
     }
 
-    .status-text {
-      font-size: 0.95rem;
-      color: var(--text-main);
-    }
-
     .btn {
       background-color: var(--accent-blue);
       color: #ffffff;
@@ -98,73 +69,45 @@
       cursor: pointer;
       transition: background-color 0.2s, opacity 0.2s;
     }
+    .btn:hover { opacity: 0.9; }
+    .btn:disabled { cursor: not-allowed; opacity: 0.8; }
 
-    .btn:hover {
-      opacity: 0.9;
-    }
-
-    .btn:disabled {
-      cursor: not-allowed;
-      opacity: 0.8;
-    }
-
-    /* Upload Area */
+    /* Upload Zone */
     .upload-zone {
       background-color: var(--card-bg);
       border: 2px dashed var(--border-color);
       border-radius: 8px;
-      padding: 40px 20px;
+      padding: 30px 20px;
       text-align: center;
       cursor: pointer;
       margin-bottom: 24px;
       transition: border-color 0.2s;
     }
+    .upload-zone:hover { border-color: var(--accent-blue); }
+    .file-input { display: none; }
 
-    .upload-zone:hover {
-      border-color: var(--accent-blue);
+    /* Operations Grid (原本的多功能面板) */
+    .section-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 16px; }
+    .grid-panel {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
     }
-
-    .file-input {
-      display: none;
-    }
-
-    /* Options */
-    .section-title {
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin-bottom: 16px;
-    }
-
-    .control-panel {
+    .op-card {
       background-color: var(--card-bg);
       border: 1px solid var(--border-color);
       border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 24px;
+      padding: 20px 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
     }
+    .op-card:hover { background-color: var(--card-hover); border-color: var(--accent-blue); }
+    .op-card i { font-size: 1.8rem; margin-bottom: 8px; color: var(--accent-blue); }
+    .op-card span { display: block; font-size: 0.85rem; font-weight: 500; }
 
-    .form-group {
-      margin-bottom: 16px;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 8px;
-      color: var(--text-muted);
-      font-size: 0.9rem;
-    }
-
-    select, input[type="text"] {
-      width: 100%;
-      padding: 10px 12px;
-      background-color: var(--bg-color);
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      color: var(--text-main);
-      font-size: 0.95rem;
-    }
-
-    /* Log Output */
+    /* Log Box */
     .log-box {
       background-color: #090a0f;
       border: 1px solid var(--border-color);
@@ -181,7 +124,6 @@
 </head>
 <body>
   <div class="container">
-    <!-- 頁頭 -->
     <header>
       <div class="logo-area">
         <span class="logo-title">📹 ffmpeg webCLI 線上影音轉檔</span>
@@ -191,32 +133,42 @@
       <a href="https://github.com/Ynosp/USEffmpeg" target="_blank" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem;">GitHub 專案</a>
     </header>
 
-    <!-- 狀態列與載入核心按鈕 -->
+    <!-- 載入狀態與按鈕 -->
     <div class="status-card">
-      <div class="status-text" id="logCurrentText">🔴 FFmpeg 尚未載入 - 點擊「載入 FFmpeg」開始使用</div>
+      <div id="logCurrentText">🔴 FFmpeg 尚未載入 - 點擊「載入 FFmpeg」開始使用</div>
       <button class="btn" onclick="loadFFmpeg()">▶ 載入 FFmpeg (~31 MB)</button>
     </div>
 
-    <!-- 檔案上傳區 -->
-    <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+    <!-- 上傳區 -->
+    <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
       <p id="uploadPrompt" style="font-size: 1.1rem; font-weight: 500; margin-bottom: 8px;">📁 點擊選取影片，或將影片檔案直接拖曳至此處</p>
       <p style="color: var(--text-muted); font-size: 0.85rem;">支援 MP4, MOV, AVI, MKV, MP3, WAV 等常見格式</p>
       <input type="file" id="fileInput" class="file-input" accept="video/*,audio/*">
     </div>
 
-    <!-- 控制與轉檔選項 -->
-    <div class="control-panel">
-      <div class="section-title">功能選擇 (OPERATIONS)</div>
-      <div class="form-group">
-        <label for="formatSelect">選擇輸出格式 / 動作：</label>
-        <select id="formatSelect">
-          <option value="mp4">轉檔為 MP4 (H.264 / AAC)</option>
-          <option value="mp3">提取音訊為 MP3</option>
-          <option value="gif">轉換為 GIF 動圖</option>
-          <option value="compress">影片壓縮 (降低位元率)</option>
-        </select>
+    <!-- 多功能選擇面板 (Operations) -->
+    <div class="section-title">功能選擇 (OPERATIONS)</div>
+    <div class="grid-panel">
+      <div class="op-card" onclick="runOperation('convert')">
+        <i class="fa-solid fa-arrows-rotate"></i>
+        <span>格式轉換</span>
       </div>
-      <button class="btn" id="startBtn" style="width: 100%; background-color: var(--accent-green);" onclick="startConversion()">🚀 開始處理並下載</button>
+      <div class="op-card" onclick="runOperation('extract_audio')">
+        <i class="fa-solid fa-music"></i>
+        <span>提取音訊</span>
+      </div>
+      <div class="op-card" onclick="runOperation('remove_audio')">
+        <i class="fa-solid fa-volume-xmark"></i>
+        <span>消除聲音</span>
+      </div>
+      <div class="op-card" onclick="runOperation('compress')">
+        <i class="fa-solid fa-file-video"></i>
+        <span>影片壓縮</span>
+      </div>
+      <div class="op-card" onclick="runOperation('gif')">
+        <i class="fa-solid fa-image"></i>
+        <span>轉為 GIF</span>
+      </div>
     </div>
 
     <!-- 執行日誌 -->
@@ -224,7 +176,6 @@
     <div class="log-box" id="logBox">> 系統已就緒，等待載入 FFmpeg 核心...</div>
   </div>
 
-  <!-- 引入 FFmpeg WebAssembly 核心庫 -->
   <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
 
   <script>
@@ -232,71 +183,55 @@
     let ffmpeg = null;
     let currentFile = null;
 
-    function log(message) {
+    function log(msg) {
       const logBox = document.getElementById("logBox");
       if (logBox) {
-        logBox.innerText += "\n> " + message;
+        logBox.innerText += "\n> " + msg;
         logBox.scrollTop = logBox.scrollHeight;
       }
-      console.log(message);
+      console.log(msg);
     }
 
-    // 1. 載入 FFmpeg 核心
+    // 載入核心
     async function loadFFmpeg() {
       const btn = document.querySelector("button[onclick*='loadFFmpeg']");
       const statusText = document.getElementById("logCurrentText");
 
       try {
-        if (btn) {
-          btn.innerText = "⏳ 載入核心中...";
-          btn.disabled = true;
-        }
+        if (btn) { btn.innerText = "⏳ 載入核心中..."; btn.disabled = true; }
         if (statusText) statusText.innerText = "正在下載 FFmpeg 模組 (~31 MB)...";
-        log("開始下載 FFmpeg WebAssembly 模組...");
+        log("下載 FFmpeg 模組中...");
 
         ffmpeg = createFFmpeg({ log: true });
-        
-        ffmpeg.setLogger(({ type, message }) => {
-          log(`[FFmpeg ${type}] ${message}`);
-        });
+        ffmpeg.setLogger(({ message }) => log(`[FFmpeg] ${message}`));
 
         await ffmpeg.load();
 
-        if (statusText) statusText.innerHTML = "<span style='color: #34d399;'>🟢 FFmpeg 已就緒，請上傳影片！</span>";
+        if (statusText) statusText.innerHTML = "<span style='color: #34d399;'>🟢 FFmpeg 已就緒，請上傳影片並選擇功能！</span>";
         if (btn) {
           btn.innerText = "✅ FFmpeg 已成功載入";
           btn.style.backgroundColor = "#10b981";
           btn.disabled = true;
         }
-        log("FFmpeg 核心成功載入完成！");
+        log("FFmpeg 核心成功載入！");
       } catch (err) {
-        console.error(err);
         if (statusText) statusText.innerText = "載入失敗：" + err.message;
-        if (btn) {
-          btn.innerText = "❌ 載入失敗，點擊重試";
-          btn.disabled = false;
-        }
+        if (btn) { btn.innerText = "❌ 載入失敗，點擊重試"; btn.disabled = false; }
         alert("FFmpeg 載入失敗：" + err.message);
-        log("載入失敗: " + err.message);
       }
     }
 
-    // 2. 處理檔案接收
+    // 接收檔案
     function handleSelectedFiles(files) {
       if (!files || files.length === 0) return;
       currentFile = files[0];
-
-      const statusText = document.getElementById("logCurrentText");
       const uploadPrompt = document.getElementById("uploadPrompt");
-
-      const fileMsg = `📄 已選擇檔案：${currentFile.name} (${(currentFile.size / 1024 / 1024).toFixed(2)} MB)`;
-      
-      if (uploadPrompt) uploadPrompt.innerText = fileMsg;
-      log(`使用者已載入檔案: ${currentFile.name}`);
+      if (uploadPrompt) uploadPrompt.innerText = `📄 已選擇檔案：${currentFile.name} (${(currentFile.size / 1024 / 1024).toFixed(2)} MB)`;
+      log(`載入檔案: ${currentFile.name}`);
     }
 
-    // 3. 執行轉檔處理
-    async function startConversion() {
+    // 執行各項功能
+    async function runOperation(type) {
       if (!ffmpeg || !ffmpeg.isLoaded()) {
         alert("請先點擊上方「▶ 載入 FFmpeg」按鈕！");
         return;
@@ -306,74 +241,57 @@
         return;
       }
 
-      const format = document.getElementById("formatSelect").value;
-      const startBtn = document.getElementById("startBtn");
-      startBtn.disabled = true;
-      startBtn.innerText = "⏳ 處理中，請稍候...";
-
       try {
         const inputName = "input_" + currentFile.name;
-        let outputName = "output_result";
-        let ffmpegArgs = [];
+        let outputName = "output";
+        let args = [];
 
-        log(`寫入檔案至虛擬檔案系統: ${inputName}`);
+        log(`寫入暫存檔: ${inputName}`);
         ffmpeg.FS('writeFile', inputName, await fetchFile(currentFile));
 
-        if (format === "mp4") {
+        if (type === 'convert') {
           outputName += ".mp4";
-          ffmpegArgs = ['-i', inputName, '-c:v', 'libx264', '-preset', 'fast', '-c:a', 'aac', outputName];
-        } else if (format === "mp3") {
+          args = ['-i', inputName, '-c:v', 'libx264', '-c:a', 'aac', outputName];
+        } else if (type === 'extract_audio') {
           outputName += ".mp3";
-          ffmpegArgs = ['-i', inputName, '-vn', '-acodec', 'libmp3lame', outputName];
-        } else if (format === "gif") {
-          outputName += ".gif";
-          ffmpegArgs = ['-i', inputName, '-vf', 'fps=10,scale=320:-1:flags=lance', outputName];
-        } else if (format === "compress") {
+          args = ['-i', inputName, '-vn', '-acodec', 'libmp3lame', outputName];
+        } else if (type === 'remove_audio') {
+          outputName += ".mp4";
+          args = ['-i', inputName, '-an', '-vcodec', 'copy', outputName];
+        } else if (type === 'compress') {
           outputName += "_compressed.mp4";
-          ffmpegArgs = ['-i', inputName, '-vcodec', 'h264', '-crf', '28', outputName];
+          args = ['-i', inputName, '-vcodec', 'h264', '-crf', '28', outputName];
+        } else if (type === 'gif') {
+          outputName += ".gif";
+          args = ['-i', inputName, '-vf', 'fps=10,scale=320:-1:flags=lance', outputName];
         }
 
-        log(`執行指令: ffmpeg ${ffmpegArgs.join(' ')}`);
-        await ffmpeg.run(...ffmpegArgs);
+        log(`開始執行指令: ffmpeg ${args.join(' ')}`);
+        await ffmpeg.run(...args);
 
-        log("轉檔完成，正在讀取輸出檔案...");
+        log("處理完成，準備下載...");
         const data = ffmpeg.FS('readFile', outputName);
-
-        // 下載檔案
-        const blob = new Blob([data.buffer], { type: 'video/mp4' });
+        const blob = new Blob([data.buffer]);
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = outputName;
         a.click();
-
-        log(`成功匯出並開始下載: ${outputName}`);
-        alert("轉檔完成，檔案已自動開始下載！");
+        log(`匯出成功: ${outputName}`);
       } catch (err) {
-        console.error(err);
-        log("轉檔過程發生錯誤: " + err.message);
-        alert("轉檔失敗: " + err.message);
-      } finally {
-        startBtn.disabled = false;
-        startBtn.innerText = "🚀 開始處理並下載";
+        alert("執行失敗: " + err.message);
+        log("錯誤: " + err.message);
       }
     }
 
-    // 4. 事件綁定
+    // 事件監聽
     document.addEventListener("DOMContentLoaded", () => {
       const fileInput = document.getElementById('fileInput');
-      if (fileInput) {
-        fileInput.addEventListener("change", (e) => {
-          handleSelectedFiles(e.target.files);
-        });
-      }
-
+      if (fileInput) fileInput.addEventListener("change", (e) => handleSelectedFiles(e.target.files));
       window.addEventListener("dragover", (e) => e.preventDefault());
       window.addEventListener("drop", (e) => {
         e.preventDefault();
-        if (e.dataTransfer && e.dataTransfer.files.length > 0) {
-          handleSelectedFiles(e.dataTransfer.files);
-        }
+        if (e.dataTransfer && e.dataTransfer.files.length > 0) handleSelectedFiles(e.dataTransfer.files);
       });
     });
   </script>
