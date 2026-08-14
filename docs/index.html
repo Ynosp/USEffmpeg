@@ -509,7 +509,39 @@
     </div>
   </div>
 </div>
+<!-- 引入 FFmpeg WebAssembly 核心庫 -->
+<script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
 
+<script>
+  const { createFFmpeg, fetchFile } = FFmpeg;
+  let ffmpeg = null;
+
+  // 定義載入 FFmpeg 的函式
+  async function loadFFmpeg() {
+    const btn = document.querySelector("button[onclick*='loadFFmpeg']");
+    const statusText = document.getElementById("logCurrentText");
+
+    try {
+      if (btn) btn.innerText = "⏳ 載入核心中...";
+      if (statusText) statusText.innerText = "正在下載 FFmpeg 模組 (~31 MB)...";
+
+      ffmpeg = createFFmpeg({ log: true });
+      await ffmpeg.load();
+
+      if (statusText) statusText.innerText = "已就緒 (FFmpeg Loaded)";
+      if (btn) {
+        btn.innerText = "✅ FFmpeg 已成功載入";
+        btn.style.backgroundColor = "#28a745";
+        btn.disabled = true;
+      }
+    } catch (err) {
+      console.error(err);
+      if (statusText) statusText.innerText = "載入失敗，請檢查網路或重新整理";
+      if (btn) btn.innerText = "❌ 載入失敗，點擊重試";
+      alert("FFmpeg 載入失敗：" + err.message);
+    }
+  }
+</script>
 </body>
 </html>
 <div class="form-group" style="color:var(--muted);font-size:.9rem">
